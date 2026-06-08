@@ -1,0 +1,191 @@
+{
+  "autonomousCommunities": [
+    {
+      "id": "andalucia",
+      "code": "01",
+      "names": { "castilian": "Andalucía", "valencian": "Andalusia" },
+      "capital": { "castilian": "Sevilla", "valencian": "Sevilla" },
+      "mapColor": "#F4D03F"
+    },
+    {
+      "id": "aragon",
+      "code": "02",
+      "names": { "castilian": "Aragón", "valencian": "Aragó" },
+      "capital": { "castilian": "Zaragoza", "valencian": "Saragossa" },
+      "mapColor": "#85C1E9"
+    },
+    {
+      "id": "asturias",
+      "code": "18",
+      "names": { "castilian": "Principado de Asturias", "valencian": "Principat d'Astúries" },
+      "capital": { "castilian": "Oviedo", "valencian": "Oviedo" },
+      "mapColor": "#1ABC9C"
+    },
+    {
+      "id": "balearicIslands",
+      "code": "03",
+      "names": { "castilian": "Islas Baleares", "valencian": "Illes Balears" },
+      "capital": { "castilian": "Palma", "valencian": "Palma" },
+      "mapColor": "#F1948A"
+    },
+    {
+      "id": "basqueCountry",
+      "code": "17",
+      "names": { "castilian": "País Vasco", "valencian": "País Basc" },
+      "capital": { "castilian": "Vitoria-Gasteiz", "valencian": "Vitòria-Gasteiz" },
+      "mapColor": "#BB8FCE"
+    },
+    {
+      "id": "canaryIslands",
+      "code": "04",
+      "names": { "castilian": "Islas Canarias", "valencian": "Illes Canàries" },
+      "capital": { "castilian": "Las Palmas / Santa Cruz de Tenerife", "valencian": "Las Palmas / Santa Cruz de Tenerife" },
+      "mapColor": "#F0B27A"
+    },
+    {
+      "id": "cantabria",
+      "code": "05",
+      "names": { "castilian": "Cantabria", "valencian": "Cantàbria" },
+      "capital": { "castilian": "Santander", "valencian": "Santander" },
+      "mapColor": "#76D7C4"
+    },
+    {
+      "id": "castillaLaMancha",
+      "code": "06",
+      "names": { "castilian": "Castilla-La Mancha", "valencian": "Castella-La Manxa" },
+      "capital": { "castilian": "Toledo", "valencian": "Toledo" },
+      "mapColor": "#F9E79F"
+    },
+    {
+      "id": "castillaYLeon",
+      "code": "07",
+      "names": { "castilian": "Castilla y León", "valencian": "Castella i Lleó" },
+      "capital": { "castilian": "Valladolid", "valencian": "Valladolid" },
+      "mapColor": "#FAD7A0"
+    },
+    {
+      "id": "catalonia",
+      "code": "08",
+      "names": { "castilian": "Cataluña", "valencian": "Catalunya" },
+      "capital": { "castilian": "Barcelona", "valencian": "Barcelona" },
+      "mapColor": "#A9CCE3"
+    },
+    {
+      "id": "ceuta",
+      "code": "09",
+      "names": { "castilian": "Ciudad Autónoma de Ceuta", "valencian": "Ciutat Autònoma de Ceuta" },
+      "capital": { "castilian": "Ceuta", "valencian": "Ceuta" },
+      "mapColor": "#A3E4D7"
+    },
+    {
+      "id": "extremadura",
+      "code": "10",
+      "names": { "castilian": "Extremadura", "valencian": "Extremadura" },
+      "capital": { "castilian": "Mérida", "valencian": "Mérida" },
+      "mapColor": "#A9DFBF"
+    },
+    {
+      "id": "galicia",
+      "code": "11",
+      "names": { "castilian": "Galicia", "valencian": "Galícia" },
+      "capital": { "castilian": "Santiago de Compostela", "valencian": "Santiago de Compostel·la" },
+      "mapColor": "#AED6F1"
+    },
+    {
+      "id": "laRioja",
+      "code": "12",
+      "names": { "castilian": "La Rioja", "valencian": "La Rioja" },
+      "capital": { "castilian": "Logroño", "valencian": "Logronyo" },
+      "mapColor": "#F1948A"
+    },
+    {
+      "id": "madrid",
+      "code": "13",
+      "names": { "castilian": "Comunidad de Madrid", "valencian": "Comunitat de Madrid" },
+      "capital": { "castilian": "Madrid", "valencian": "Madrid" },
+      "mapColor": "#85C1E9"
+    },
+    {
+      "id": "melilla",
+      "code": "14",
+      "names": { "castilian": "Ciudad Autónoma de Melilla", "valencian": "Ciutat Autònoma de Melilla" },
+      "capital": { "castilian": "Melilla", "valencian": "Melilla" },
+      "mapColor": "#D2B4DE"
+    },
+    {
+      "id": "murcia",
+      "code": "15",
+      "names": { "castilian": "Región de Murcia", "valencian": "Regió de Múrcia" },
+      "capital": { "castilian": "Murcia", "valencian": "Múrcia" },
+      "mapColor": "#A9DFBF"
+    },
+    {
+      "id": "navarre",
+      "code": "16",
+      "names": { "castilian": "Comunidad Foral de Navarra", "valencian": "Comunitat Foral de Navarra" },
+      "capital": { "castilian": "Pamplona", "valencian": "Pamplona" },
+      "mapColor": "#C39BD3"
+    },
+    {
+      "id": "valencianCommunity",
+      "code": "19",
+      "names": { "castilian": "Comunidad Valenciana", "valencian": "Comunitat Valenciana" },
+      "capital": { "castilian": "Valencia", "valencian": "València" },
+      "mapColor": "#7DCEA0"
+    }
+  ],
+  "provinces": [
+    { "id": "alava",               "code": "01", "communityCode": "17", "names": { "castilian": "Álava",                  "valencian": "Àlaba"              }, "capital": { "castilian": "Vitoria-Gasteiz",            "valencian": "Vitòria-Gasteiz"          } },
+    { "id": "albacete",            "code": "02", "communityCode": "06", "names": { "castilian": "Albacete",               "valencian": "Albacete"           }, "capital": { "castilian": "Albacete",                   "valencian": "Albacete"                 } },
+    { "id": "alicante",            "code": "03", "communityCode": "19", "names": { "castilian": "Alicante",               "valencian": "Alacant"            }, "capital": { "castilian": "Alicante",                   "valencian": "Alacant"                  } },
+    { "id": "almeria",             "code": "04", "communityCode": "01", "names": { "castilian": "Almería",                "valencian": "Almeria"            }, "capital": { "castilian": "Almería",                    "valencian": "Almeria"                  } },
+    { "id": "avila",               "code": "05", "communityCode": "07", "names": { "castilian": "Ávila",                  "valencian": "Àvila"              }, "capital": { "castilian": "Ávila",                      "valencian": "Àvila"                    } },
+    { "id": "badajoz",             "code": "06", "communityCode": "10", "names": { "castilian": "Badajoz",                "valencian": "Badajoz"            }, "capital": { "castilian": "Badajoz",                    "valencian": "Badajoz"                  } },
+    { "id": "balearicIslands",     "code": "07", "communityCode": "03", "names": { "castilian": "Islas Baleares",         "valencian": "Illes Balears"      }, "capital": { "castilian": "Palma",                      "valencian": "Palma"                    } },
+    { "id": "barcelona",           "code": "08", "communityCode": "08", "names": { "castilian": "Barcelona",              "valencian": "Barcelona"          }, "capital": { "castilian": "Barcelona",                  "valencian": "Barcelona"                 } },
+    { "id": "burgos",              "code": "09", "communityCode": "07", "names": { "castilian": "Burgos",                 "valencian": "Burgos"             }, "capital": { "castilian": "Burgos",                     "valencian": "Burgos"                   } },
+    { "id": "caceres",             "code": "10", "communityCode": "10", "names": { "castilian": "Cáceres",                "valencian": "Càceres"            }, "capital": { "castilian": "Cáceres",                    "valencian": "Càceres"                  } },
+    { "id": "cadiz",               "code": "11", "communityCode": "01", "names": { "castilian": "Cádiz",                  "valencian": "Cadis"              }, "capital": { "castilian": "Cádiz",                      "valencian": "Cadis"                    } },
+    { "id": "castellon",           "code": "12", "communityCode": "19", "names": { "castilian": "Castellón",              "valencian": "Castelló"           }, "capital": { "castilian": "Castellón de la Plana",      "valencian": "Castelló de la Plana"     } },
+    { "id": "ciudadReal",          "code": "13", "communityCode": "06", "names": { "castilian": "Ciudad Real",            "valencian": "Ciudad Real"        }, "capital": { "castilian": "Ciudad Real",                "valencian": "Ciudad Real"              } },
+    { "id": "cordoba",             "code": "14", "communityCode": "01", "names": { "castilian": "Córdoba",                "valencian": "Còrdova"            }, "capital": { "castilian": "Córdoba",                    "valencian": "Còrdova"                  } },
+    { "id": "aCoruna",             "code": "15", "communityCode": "11", "names": { "castilian": "A Coruña",               "valencian": "A Corunya"          }, "capital": { "castilian": "A Coruña",                   "valencian": "A Corunya"                } },
+    { "id": "cuenca",              "code": "16", "communityCode": "06", "names": { "castilian": "Cuenca",                 "valencian": "Conca"              }, "capital": { "castilian": "Cuenca",                     "valencian": "Conca"                    } },
+    { "id": "girona",              "code": "17", "communityCode": "08", "names": { "castilian": "Girona",                 "valencian": "Girona"             }, "capital": { "castilian": "Girona",                     "valencian": "Girona"                   } },
+    { "id": "granada",             "code": "18", "communityCode": "01", "names": { "castilian": "Granada",                "valencian": "Granada"            }, "capital": { "castilian": "Granada",                    "valencian": "Granada"                  } },
+    { "id": "guadalajara",         "code": "19", "communityCode": "06", "names": { "castilian": "Guadalajara",            "valencian": "Guadalajara"        }, "capital": { "castilian": "Guadalajara",                "valencian": "Guadalajara"              } },
+    { "id": "guipuzcoa",           "code": "20", "communityCode": "17", "names": { "castilian": "Guipúzcoa",              "valencian": "Guipúscoa"          }, "capital": { "castilian": "San Sebastián",              "valencian": "Sant Sebastià"            } },
+    { "id": "huelva",              "code": "21", "communityCode": "01", "names": { "castilian": "Huelva",                 "valencian": "Huelva"             }, "capital": { "castilian": "Huelva",                     "valencian": "Huelva"                   } },
+    { "id": "huesca",              "code": "22", "communityCode": "02", "names": { "castilian": "Huesca",                 "valencian": "Osca"               }, "capital": { "castilian": "Huesca",                     "valencian": "Osca"                     } },
+    { "id": "jaen",                "code": "23", "communityCode": "01", "names": { "castilian": "Jaén",                   "valencian": "Jaén"               }, "capital": { "castilian": "Jaén",                       "valencian": "Jaén"                     } },
+    { "id": "leon",                "code": "24", "communityCode": "07", "names": { "castilian": "León",                   "valencian": "Lleó"               }, "capital": { "castilian": "León",                       "valencian": "Lleó"                     } },
+    { "id": "lleida",              "code": "25", "communityCode": "08", "names": { "castilian": "Lérida",                 "valencian": "Lleida"             }, "capital": { "castilian": "Lérida",                     "valencian": "Lleida"                   } },
+    { "id": "laRioja",             "code": "26", "communityCode": "12", "names": { "castilian": "La Rioja",               "valencian": "La Rioja"           }, "capital": { "castilian": "Logroño",                    "valencian": "Logronyo"                 } },
+    { "id": "lugo",                "code": "27", "communityCode": "11", "names": { "castilian": "Lugo",                   "valencian": "Lugo"               }, "capital": { "castilian": "Lugo",                       "valencian": "Lugo"                     } },
+    { "id": "madrid",              "code": "28", "communityCode": "13", "names": { "castilian": "Madrid",                 "valencian": "Madrid"             }, "capital": { "castilian": "Madrid",                     "valencian": "Madrid"                   } },
+    { "id": "malaga",              "code": "29", "communityCode": "01", "names": { "castilian": "Málaga",                 "valencian": "Màlaga"             }, "capital": { "castilian": "Málaga",                     "valencian": "Màlaga"                   } },
+    { "id": "murcia",              "code": "30", "communityCode": "15", "names": { "castilian": "Murcia",                 "valencian": "Múrcia"             }, "capital": { "castilian": "Murcia",                     "valencian": "Múrcia"                   } },
+    { "id": "navarre",             "code": "31", "communityCode": "16", "names": { "castilian": "Navarra",                "valencian": "Navarra"            }, "capital": { "castilian": "Pamplona",                   "valencian": "Pamplona"                 } },
+    { "id": "ourense",             "code": "32", "communityCode": "11", "names": { "castilian": "Orense",                 "valencian": "Ourense"            }, "capital": { "castilian": "Orense",                     "valencian": "Ourense"                  } },
+    { "id": "asturias",            "code": "33", "communityCode": "18", "names": { "castilian": "Asturias",               "valencian": "Astúries"           }, "capital": { "castilian": "Oviedo",                     "valencian": "Oviedo"                   } },
+    { "id": "palencia",            "code": "34", "communityCode": "07", "names": { "castilian": "Palencia",               "valencian": "Palència"           }, "capital": { "castilian": "Palencia",                   "valencian": "Palència"                 } },
+    { "id": "lasPalmas",           "code": "35", "communityCode": "04", "names": { "castilian": "Las Palmas",              "valencian": "Las Palmas"         }, "capital": { "castilian": "Las Palmas de Gran Canaria",  "valencian": "Las Palmas de Gran Canaria"} },
+    { "id": "pontevedra",          "code": "36", "communityCode": "11", "names": { "castilian": "Pontevedra",              "valencian": "Pontevedra"         }, "capital": { "castilian": "Pontevedra",                 "valencian": "Pontevedra"               } },
+    { "id": "salamanca",           "code": "37", "communityCode": "07", "names": { "castilian": "Salamanca",               "valencian": "Salamanca"          }, "capital": { "castilian": "Salamanca",                  "valencian": "Salamanca"                } },
+    { "id": "santaCruzDeTenerife", "code": "38", "communityCode": "04", "names": { "castilian": "Santa Cruz de Tenerife",  "valencian": "Santa Cruz de Tenerife" }, "capital": { "castilian": "Santa Cruz de Tenerife", "valencian": "Santa Cruz de Tenerife"  } },
+    { "id": "cantabria",           "code": "39", "communityCode": "05", "names": { "castilian": "Cantabria",               "valencian": "Cantàbria"          }, "capital": { "castilian": "Santander",                  "valencian": "Santander"                } },
+    { "id": "segovia",             "code": "40", "communityCode": "07", "names": { "castilian": "Segovia",                 "valencian": "Segòvia"            }, "capital": { "castilian": "Segovia",                    "valencian": "Segòvia"                  } },
+    { "id": "sevilla",             "code": "41", "communityCode": "01", "names": { "castilian": "Sevilla",                 "valencian": "Sevilla"            }, "capital": { "castilian": "Sevilla",                    "valencian": "Sevilla"                  } },
+    { "id": "soria",               "code": "42", "communityCode": "07", "names": { "castilian": "Soria",                   "valencian": "Sòria"              }, "capital": { "castilian": "Soria",                      "valencian": "Sòria"                    } },
+    { "id": "tarragona",           "code": "43", "communityCode": "08", "names": { "castilian": "Tarragona",               "valencian": "Tarragona"          }, "capital": { "castilian": "Tarragona",                  "valencian": "Tarragona"                } },
+    { "id": "teruel",              "code": "44", "communityCode": "02", "names": { "castilian": "Teruel",                  "valencian": "Terol"              }, "capital": { "castilian": "Teruel",                     "valencian": "Terol"                    } },
+    { "id": "toledo",              "code": "45", "communityCode": "06", "names": { "castilian": "Toledo",                  "valencian": "Toledo"             }, "capital": { "castilian": "Toledo",                     "valencian": "Toledo"                   } },
+    { "id": "valencia",            "code": "46", "communityCode": "19", "names": { "castilian": "Valencia",                "valencian": "València"           }, "capital": { "castilian": "Valencia",                   "valencian": "València"                 } },
+    { "id": "valladolid",          "code": "47", "communityCode": "07", "names": { "castilian": "Valladolid",              "valencian": "Valladolid"         }, "capital": { "castilian": "Valladolid",                 "valencian": "Valladolid"               } },
+    { "id": "vizcaya",             "code": "48", "communityCode": "17", "names": { "castilian": "Vizcaya",                 "valencian": "Biscaia"            }, "capital": { "castilian": "Bilbao",                     "valencian": "Bilbao"                   } },
+    { "id": "zamora",              "code": "49", "communityCode": "07", "names": { "castilian": "Zamora",                  "valencian": "Zamora"             }, "capital": { "castilian": "Zamora",                     "valencian": "Zamora"                   } },
+    { "id": "zaragoza",            "code": "50", "communityCode": "02", "names": { "castilian": "Zaragoza",                "valencian": "Saragossa"          }, "capital": { "castilian": "Zaragoza",                   "valencian": "Saragossa"                } },
+    { "id": "ceuta",               "code": "51", "communityCode": "09", "names": { "castilian": "Ceuta",                   "valencian": "Ceuta"              }, "capital": { "castilian": "Ceuta",                      "valencian": "Ceuta"                    } },
+    { "id": "melilla",             "code": "52", "communityCode": "14", "names": { "castilian": "Melilla",                 "valencian": "Melilla"            }, "capital": { "castilian": "Melilla",                    "valencian": "Melilla"                  } }
+  ]
+}
