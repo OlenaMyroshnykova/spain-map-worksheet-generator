@@ -1,16 +1,25 @@
 # Spain Map Geography Trainer — Project Handoff
 
-## GitHub
-https://github.com/OlenaMyroshnykova/spain-map-worksheet-generator
+**GitHub:** https://github.com/OlenaMyroshnykova/spain-map-worksheet-generator  
+**How Claude gets here:** This URL is in the system prompt of every new chat session.
 
-## What this project is
-An educational geography trainer for a ~10-year-old child, inspired by Duolingo but for political maps. Step 1 is **printable worksheet generator** for Spain. Future: interactive web app, European countries, world map.
+---
 
-**User:** Child learning in **Castilian (Spanish) and Valencian**, based in Valencia region of Spain.
+## Project overview
+Educational geography trainer for a ~10-year-old child (based in Valencia, Spain).  
+Inspired by Duolingo, focused on political maps.  
+Parent communicates in **Russian** — always respond to parent in Russian.  
+Worksheet content language: **Castilian (ES)** and **Valencian (VAL)** — both equal.
+
+**Roadmap:**
+1. ✅ Step 1 (current): Printable worksheet generator for Spain
+2. Step 2: Interactive browser exercises
+3. Step 3: Gamification and progress tracking
+4. Future: European countries with flags, world map
 
 ## Tech stack
-- Plain HTML + JavaScript (no framework yet)
-- Geographic data stored in **JSON files** (easy to extend)
+- Plain HTML + JavaScript, single `index.html` to start
+- Geographic data in embedded JSON (later: separate `.json` files)
 - React planned for future interactive phase
 
 ## Principles
@@ -18,71 +27,74 @@ An educational geography trainer for a ~10-year-old child, inspired by Duolingo 
 2. Every step produces a usable result
 3. All geo data in JSON — easy to add topics and languages
 
-## Languages
-- **Castilian** (castellano / español)
-- **Valencian** (valencià) — co-equal, not secondary
+---
 
-## Current stage: Step 1 — Printable Worksheets
-
-### What has been done
-- [ ] Nothing committed to GitHub yet — project is being set up
-
-### What is being built RIGHT NOW
-A self-contained `index.html` worksheet generator that:
-- Contains Spain geographic data (provinces + autonomous communities) in embedded JSON, bilingual ES/VAL
-- Draws a simplified SVG map of Spain
-- Generates **random** printable worksheets
-- Exercise types (inspired by edufichas.com PDF style):
-  - Labeled reference map (comunidades / provinces with names)
-  - Blank map — write the names (mapa mudo)
-  - Color-by-instruction — color specified regions
-  - Match province → comunidad
-  - Reference table: province / capital / comunidad
-- Language toggle: Castellano / Valencià
-- Topic toggle: Provincias / Comunidades Autónomas
-- Print button → clean A4 output, no UI chrome
-
-### Key geographic data to include
-**17 Comunidades Autónomas + 2 Ciudades Autónomas**, all 50 provinces, with:
-- Name in Castilian
-- Name in Valencian
-- Capital city
-- Which comunidad each province belongs to
-
-### Child's home region
-**Comunitat Valenciana** — 3 provinces: Castelló, València, Alacant. Emphasize this region.
+## Geographic scope
+- **17 Comunidades Autónomas + 2 Ciudades Autónomas** (Ceuta, Melilla)
+- **50 provinces**, each with: name (ES + VAL), capital, parent comunidad
+- **Priority region:** Comunitat Valenciana — Castelló, València, Alacant
 
 ---
 
-## Instructions for Claude in a new chat
+## What has been done
+*(updated at end of each chat session)*
 
-You are continuing development of this educational geography trainer. The conversation must be in **Russian** (the parent communicates in Russian). The child uses Spanish and Valencian.
+- [ ] Nothing committed to GitHub yet
 
-### How to start
-1. Read this document fully
-2. Check the GitHub repo for what's actually been committed: https://github.com/OlenaMyroshnykova/spain-map-worksheet-generator
-3. Ask the parent what to work on next, or continue from "What is being built RIGHT NOW"
+---
 
-### How to end a session
-Before the conversation gets too long (context window filling up), **proactively suggest** starting a new chat. Say something like:
+## Next task
+Build `index.html` — self-contained printable worksheet generator:
+- Bilingual data (ES / VAL) embedded as JSON
+- SVG map of Spain (simplified but accurate)
+- Random worksheet generator with exercise types:
+  - Labeled reference map
+  - Blank map (mapa mudo) — child writes names
+  - Color-by-instruction
+  - Match province → comunidad
+  - Reference table: province / capital / comunidad
+- UI controls: language toggle, topic toggle (provincias / comunidades), randomize button
+- Print button → clean A4, no UI chrome
 
-> "Скоро стоит начать новый чат — контекст заполняется. Перед этим я обновлю PROJECT.md с тем, что мы сделали сегодня. Хочешь, чтобы я это сделал прямо сейчас?"
+---
 
-Then update this file with:
-- What was built/committed
-- Current state of the code
-- What should be done next
-- Any important decisions made
+## Key decisions
+- Parent language: **Russian**
+- Worksheet language: selectable ES / VAL
+- Child age: ~10 years, needs both provinces AND comunidades
+- Both provinces and comunidades matter equally
+- Start with single self-contained `index.html`
 
-### Key decisions already made
-- All UI responses to parent: **Russian**
-- Worksheet content language: selectable ES / VAL
-- Data format: embedded JSON (later: separate .json files)
-- Start with self-contained single `index.html`
+---
+
+## Instructions for Claude
+
+### At session start
+1. Read this document (you already have — it's in the system prompt fetch)
+2. Summarize to the parent in Russian: what the project is, what was done last time, what's next
+3. Ask if they want to continue with "Next task" or change direction
+
+### During session
+- Respond to parent in Russian
+- Worksheet/UI text: in Spanish and/or Valencian as appropriate
+- Commit working code to GitHub when a logical unit is complete
+
+### At session end — MANDATORY
+When the conversation reaches ~15 messages OR when a feature is complete, say:
+
+> "Пора открыть новый чат — контекст заполняется. Сейчас обновлю PROJECT.md, чтобы следующий чат знал, где мы остановились."
+
+Then output an updated PROJECT.md with:
+- "What has been done" — updated checklist
+- "Next task" — what comes next
+- Any new decisions made
+- Updated changelog
+
+**Do not skip this step.** The updated PROJECT.md is how continuity works across sessions.
 
 ---
 
 ## Changelog
 | Date | What happened |
 |------|--------------|
-| 2026-06-09 | Project started. PROJECT.md created. Worksheet generator in progress. |
+| 2026-06-09 | Project started, PROJECT.md created, worksheet generator planned |
