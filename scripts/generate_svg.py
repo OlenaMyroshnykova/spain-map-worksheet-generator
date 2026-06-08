@@ -1,23 +1,24 @@
 """
 generate_svg.py
 
-Downloads Spain province boundaries from a public GeoJSON source,
-merges them with data from spain.json, and saves a clean SVG map
-to maps/spain.svg.
+Downloads Spain province boundaries from a public GeoJSON source and builds
+two clean SVG maps:
 
-Each province <path> in the output SVG has:
-  - id="province-{code}"            e.g. id="province-46"
-  - data-province-id="{id}"         e.g. data-province-id="valencia"
-  - data-community-code="{code}"    e.g. data-community-code="19"
-  - fill set to the community color from spain.json
+  maps/provinces.svg     — 52 provinces, each <path> coloured by community
+  maps/communities.svg   — 19 autonomous communities (provinces dissolved)
+
+Each <path> carries data attributes for future interactivity:
+  id="province-{code}"           e.g. id="province-46"
+  data-province-id="{id}"        e.g. data-province-id="valencia"
+  data-community-code="{code}"   e.g. data-community-code="19"
 
 Usage:
     pip install -r requirements.txt
     python scripts/generate_svg.py
 """
 
+import io
 import json
-import os
 import sys
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -32,7 +33,8 @@ from shapely.geometry import MultiPolygon, Polygon
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_FILE = REPO_ROOT / "data" / "spain.json"
-OUTPUT_FILE = REPO_ROOT / "maps" / "spain.svg"
+OUTPUT_PROVINCES = REPO_ROOT / "maps" / "provinces.svg"
+OUTPUT_COMMUNITIES = REPO_ROOT / "maps" / "communities.svg"
 
 GEOJSON_URL = (
     "https://raw.githubusercontent.com/"
@@ -46,13 +48,12 @@ GEOJSON_URL = (
 SVG_WIDTH = 900
 SVG_HEIGHT = 700
 
-# Canary Islands are far from the mainland so we render them in an inset box.
+# Canary Islands are far west — render them in a small inset box.
 INSET_X = 30
 INSET_Y = 530
 INSET_WIDTH = 200
 INSET_HEIGHT = 130
 
-# Approximate bounding box of mainland Spain + Baleares (longitude, latitude).
 MAINLAND_BOUNDS = {
     "min_lon": -9.5,
     "max_lon": 4.4,
@@ -60,7 +61,6 @@ MAINLAND_BOUNDS = {
     "max_lat": 43.8,
 }
 
-# Approximate bounding box of the Canary Islands.
 CANARY_BOUNDS = {
     "min_lon": -18.2,
     "max_lon": -13.3,
@@ -72,7 +72,7 @@ CANARY_BOUNDS = {
 CANARY_PROVINCE_CODES = {"35", "38"}
 
 # ---------------------------------------------------------------------------
-# Helpers
+# Data loaders
 # ---------------------------------------------------------------------------
 
 
@@ -82,161 +82,237 @@ def load_spain_data(path: Path) -> dict:
 
 
 def build_community_color_map(spain_data: dict) -> dict[str, str]:
-    """Return {communityCode: mapColor} from spain.json."""
-    return {
-        community["code"]: community["mapColor"]
-        for community in spain_data["autonomousCommunities"]
-    }
+    """Return {communityCode: mapColor}."""
+    return {c["code"]: c["mapColor"] for c in spain_data["autonomousCommunities"]}
+
+
+def build_community_name_map(spain_data: dict) -> dict[str, str]:
+    """Return {communityCode: castilian name}."""
+    return {c["code"]: c["names"]["castilian"] for c in spain_data["autonomousCommunities"]}
+
+
+def build_community_id_map(spain_data: dict) -> dict[str, str]:
+    """Return {communityCode: community id}."""
+    return {c["code"]: c["id"] for c in spain_data["autonomousCommunities"]}
 
 
 def build_province_id_map(spain_data: dict) -> dict[str, str]:
-    """Return {provinceCode: provinceId} from spain.json."""
-    return {
-        province["code"]: province["id"]
-        for province in spain_data["provinces"]
-    }
+    """Return {provinceCode: province id}."""
+    return {p["code"]: p["id"] for p in spain_data["provinces"]}
 
 
 def download_geojson(url: str) -> gpd.GeoDataFrame:
-    print(f"Downloading province boundaries from:\n  {url}")
+    print(f"  Downloading: {url}")
     with urllib.request.urlopen(url) as response:
         raw = response.read()
-    import io
     return gpd.read_file(io.BytesIO(raw))
 
 
-def project_to_svg(lon: float, lat: float, bounds: dict, canvas_w: float, canvas_h: float) -> tuple[float, float]:
-    """
-    Convert geographic coordinates to SVG pixel coordinates.
-    Latitude is flipped because SVG y-axis grows downward.
-    Adds a small padding so shapes don't touch the canvas edge.
-    """
-    padding = 10
+# ---------------------------------------------------------------------------
+# Coordinate projection
+# ---------------------------------------------------------------------------
+
+
+def project_to_svg(
+    lon: float,
+    lat: float,
+    bounds: dict,
+    canvas_w: float,
+    canvas_h: float,
+    padding: float = 10,
+) -> tuple[float, float]:
+    """Convert geographic lon/lat to SVG pixel coordinates."""
     usable_w = canvas_w - 2 * padding
     usable_h = canvas_h - 2 * padding
-
     x = padding + (lon - bounds["min_lon"]) / (bounds["max_lon"] - bounds["min_lon"]) * usable_w
     y = padding + (bounds["max_lat"] - lat) / (bounds["max_lat"] - bounds["min_lat"]) * usable_h
     return round(x, 2), round(y, 2)
 
 
-def polygon_to_svg_path(polygon: Polygon, bounds: dict, canvas_w: float, canvas_h: float) -> str:
-    """Convert a Shapely Polygon to an SVG path data string."""
-    parts = []
+def polygon_to_path_data(
+    polygon: Polygon,
+    bounds: dict,
+    canvas_w: float,
+    canvas_h: float,
+) -> str:
+    """Convert a Shapely Polygon to SVG path data string."""
 
-    def ring_to_commands(coords) -> str:
+    def ring_commands(coords) -> str:
         commands = []
         for i, (lon, lat) in enumerate(coords):
             x, y = project_to_svg(lon, lat, bounds, canvas_w, canvas_h)
-            cmd = "M" if i == 0 else "L"
-            commands.append(f"{cmd}{x},{y}")
+            commands.append(f"{'M' if i == 0 else 'L'}{x},{y}")
         commands.append("Z")
         return " ".join(commands)
 
-    parts.append(ring_to_commands(polygon.exterior.coords))
+    parts = [ring_commands(polygon.exterior.coords)]
     for interior in polygon.interiors:
-        parts.append(ring_to_commands(interior.coords))
-
+        parts.append(ring_commands(interior.coords))
     return " ".join(parts)
 
 
-def geometry_to_svg_path(geometry, bounds: dict, canvas_w: float, canvas_h: float) -> str:
+def geometry_to_path_data(
+    geometry,
+    bounds: dict,
+    canvas_w: float,
+    canvas_h: float,
+) -> str:
     """Convert a Shapely geometry (Polygon or MultiPolygon) to SVG path data."""
-    if isinstance(geometry, Polygon):
-        polygons = [geometry]
-    elif isinstance(geometry, MultiPolygon):
-        polygons = list(geometry.geoms)
-    else:
-        return ""
-
-    return " ".join(
-        polygon_to_svg_path(p, bounds, canvas_w, canvas_h)
-        for p in polygons
-    )
+    polygons = list(geometry.geoms) if isinstance(geometry, MultiPolygon) else [geometry]
+    return " ".join(polygon_to_path_data(p, bounds, canvas_w, canvas_h) for p in polygons)
 
 
 # ---------------------------------------------------------------------------
-# SVG builder
+# SVG helpers
 # ---------------------------------------------------------------------------
 
 
-def build_svg(gdf: gpd.GeoDataFrame, community_colors: dict, province_ids: dict) -> ET.Element:
+def make_svg_root() -> ET.Element:
     ET.register_namespace("", "http://www.w3.org/2000/svg")
-
-    svg = ET.Element("svg", {
+    return ET.Element("svg", {
         "xmlns": "http://www.w3.org/2000/svg",
         "viewBox": f"0 0 {SVG_WIDTH} {SVG_HEIGHT}",
         "width": str(SVG_WIDTH),
         "height": str(SVG_HEIGHT),
     })
 
-    # Style block
-    style = ET.SubElement(svg, "style")
-    style.text = (
-        "path { stroke: #555; stroke-width: 0.6; stroke-linejoin: round; } "
-        "path:hover { opacity: 0.8; cursor: pointer; } "
-        ".inset-border { fill: none; stroke: #999; stroke-width: 1; stroke-dasharray: 4 3; } "
-        ".inset-label { font-family: sans-serif; font-size: 9px; fill: #666; } "
-    )
 
-    # --- Mainland + Baleares group ---
-    mainland_group = ET.SubElement(svg, "g", {"id": "mainland"})
+SHARED_STYLE = (
+    "path { stroke: #555; stroke-width: 0.6; stroke-linejoin: round; } "
+    "path:hover { opacity: 0.8; cursor: pointer; } "
+    ".inset-border { fill: none; stroke: #999; stroke-width: 1; stroke-dasharray: 4 3; } "
+    ".inset-label { font-family: sans-serif; font-size: 9px; fill: #666; } "
+)
 
-    # --- Canary Islands inset group ---
-    inset_group = ET.SubElement(svg, "g", {"id": "canary-islands-inset"})
 
-    # Inset border rectangle
-    ET.SubElement(inset_group, "rect", {
+def add_inset_frame(parent: ET.Element, label: str) -> ET.Element:
+    """Add the Canary Islands inset box and return a <g> to place paths in."""
+    group = ET.SubElement(parent, "g", {"id": "canary-islands-inset"})
+    ET.SubElement(group, "rect", {
         "x": str(INSET_X),
         "y": str(INSET_Y),
         "width": str(INSET_WIDTH),
         "height": str(INSET_HEIGHT),
         "class": "inset-border",
     })
-
-    # Inset label
-    label = ET.SubElement(inset_group, "text", {
+    text = ET.SubElement(group, "text", {
         "x": str(INSET_X + 4),
         "y": str(INSET_Y + INSET_HEIGHT - 4),
         "class": "inset-label",
     })
-    label.text = "Islas Canarias"
+    text.text = label
+    return group
 
-    # --- Render each province ---
+
+def is_canary_province(code: str) -> bool:
+    return code in CANARY_PROVINCE_CODES
+
+
+def add_path(
+    parent: ET.Element,
+    path_data: str,
+    attributes: dict,
+    is_inset: bool = False,
+) -> None:
+    attrs = {**attributes, "d": path_data}
+    if is_inset:
+        attrs["transform"] = f"translate({INSET_X},{INSET_Y})"
+    ET.SubElement(parent, "path", attrs)
+
+
+# ---------------------------------------------------------------------------
+# SVG builders
+# ---------------------------------------------------------------------------
+
+
+def build_provinces_svg(
+    gdf: gpd.GeoDataFrame,
+    community_colors: dict,
+    province_ids: dict,
+) -> ET.Element:
+    """Build SVG with one <path> per province."""
+    svg = make_svg_root()
+    ET.SubElement(svg, "style").text = SHARED_STYLE
+
+    mainland = ET.SubElement(svg, "g", {"id": "mainland"})
+    inset = add_inset_frame(svg, "Islas Canarias")
+
     for _, row in gdf.iterrows():
         province_code = str(row["cod_prov"]).zfill(2)
         community_code = str(row["cod_ccaa"]).zfill(2)
         province_id = province_ids.get(province_code, province_code)
-        fill_color = community_colors.get(community_code, "#CCCCCC")
+        fill = community_colors.get(community_code, "#CCCCCC")
+        canary = is_canary_province(province_code)
 
-        is_canary = province_code in CANARY_PROVINCE_CODES
+        bounds = CANARY_BOUNDS if canary else MAINLAND_BOUNDS
+        canvas_w = INSET_WIDTH if canary else SVG_WIDTH
+        canvas_h = INSET_HEIGHT if canary else SVG_HEIGHT
 
-        if is_canary:
-            path_data = geometry_to_svg_path(
-                row.geometry, CANARY_BOUNDS, INSET_WIDTH, INSET_HEIGHT
-            )
-            # Offset path into the inset box
-            path_element = ET.SubElement(inset_group, "path", {
-                "id": f"province-{province_code}",
-                "data-province-id": province_id,
-                "data-community-code": community_code,
-                "d": path_data,
-                "fill": fill_color,
-                "transform": f"translate({INSET_X},{INSET_Y})",
-            })
-        else:
-            path_data = geometry_to_svg_path(
-                row.geometry, MAINLAND_BOUNDS, SVG_WIDTH, SVG_HEIGHT
-            )
-            ET.SubElement(mainland_group, "path", {
-                "id": f"province-{province_code}",
-                "data-province-id": province_id,
-                "data-community-code": community_code,
-                "d": path_data,
-                "fill": fill_color,
-            })
+        path_data = geometry_to_path_data(row.geometry, bounds, canvas_w, canvas_h)
+        attrs = {
+            "id": f"province-{province_code}",
+            "data-province-id": province_id,
+            "data-community-code": community_code,
+            "fill": fill,
+        }
+        add_path(inset if canary else mainland, path_data, attrs, is_inset=canary)
 
     return svg
+
+
+def build_communities_svg(
+    gdf: gpd.GeoDataFrame,
+    community_colors: dict,
+    community_ids: dict,
+) -> ET.Element:
+    """
+    Build SVG with one <path> per autonomous community.
+    Provinces are dissolved into their community geometry before rendering.
+    """
+    communities_gdf = gdf.dissolve(by="cod_ccaa").reset_index()
+
+    svg = make_svg_root()
+    ET.SubElement(svg, "style").text = SHARED_STYLE
+
+    mainland = ET.SubElement(svg, "g", {"id": "mainland"})
+    inset = add_inset_frame(svg, "Islas Canarias")
+
+    for _, row in communities_gdf.iterrows():
+        community_code = str(row["cod_ccaa"]).zfill(2)
+        community_id = community_ids.get(community_code, community_code)
+        fill = community_colors.get(community_code, "#CCCCCC")
+
+        # Canary Islands community has both island groups (codes 35, 38)
+        is_canary = community_code == "04"
+
+        bounds = CANARY_BOUNDS if is_canary else MAINLAND_BOUNDS
+        canvas_w = INSET_WIDTH if is_canary else SVG_WIDTH
+        canvas_h = INSET_HEIGHT if is_canary else SVG_HEIGHT
+
+        path_data = geometry_to_path_data(row.geometry, bounds, canvas_w, canvas_h)
+        attrs = {
+            "id": f"community-{community_code}",
+            "data-community-id": community_id,
+            "data-community-code": community_code,
+            "fill": fill,
+        }
+        add_path(inset if is_canary else mainland, path_data, attrs, is_inset=is_canary)
+
+    return svg
+
+
+# ---------------------------------------------------------------------------
+# File writer
+# ---------------------------------------------------------------------------
+
+
+def write_svg(element: ET.Element, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tree = ET.ElementTree(element)
+    ET.indent(tree, space="  ")
+    tree.write(path, encoding="unicode", xml_declaration=False)
+    size_kb = path.stat().st_size // 1024
+    print(f"  Saved: {path}  ({size_kb} KB)")
 
 
 # ---------------------------------------------------------------------------
@@ -244,28 +320,31 @@ def build_svg(gdf: gpd.GeoDataFrame, community_colors: dict, province_ids: dict)
 # ---------------------------------------------------------------------------
 
 
-def main():
+def main() -> None:
     print("=== Spain SVG Map Generator ===\n")
 
     if not DATA_FILE.exists():
-        print(f"ERROR: data file not found at {DATA_FILE}")
+        print(f"ERROR: data file not found: {DATA_FILE}")
         sys.exit(1)
 
     spain_data = load_spain_data(DATA_FILE)
     community_colors = build_community_color_map(spain_data)
+    community_ids = build_community_id_map(spain_data)
     province_ids = build_province_id_map(spain_data)
 
+    print("Downloading province boundaries...")
     gdf = download_geojson(GEOJSON_URL)
-    print(f"Loaded {len(gdf)} provinces.\n")
+    print(f"  Loaded {len(gdf)} provinces.\n")
 
-    svg_element = build_svg(gdf, community_colors, province_ids)
+    print("Building provinces.svg...")
+    provinces_svg = build_provinces_svg(gdf, community_colors, province_ids)
+    write_svg(provinces_svg, OUTPUT_PROVINCES)
 
-    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
-    tree = ET.ElementTree(svg_element)
-    ET.indent(tree, space="  ")
-    tree.write(OUTPUT_FILE, encoding="unicode", xml_declaration=False)
+    print("\nBuilding communities.svg...")
+    communities_svg = build_communities_svg(gdf, community_colors, community_ids)
+    write_svg(communities_svg, OUTPUT_COMMUNITIES)
 
-    print(f"SVG saved to: {OUTPUT_FILE}")
+    print("\nDone.")
 
 
 if __name__ == "__main__":

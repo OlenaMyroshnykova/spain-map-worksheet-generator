@@ -1,7 +1,7 @@
 # Spain Map Worksheet Generator
 
 Educational geography trainer for children — printable worksheets with maps of Spain.
-Inspired by [edufichas.com](https://www.edufichas.com), built to grow into a Duolingo-style interactive app.
+Inspired by educational worksheet sites, built to grow into a gamified geography trainer.
 
 ## What it does
 
@@ -26,13 +26,14 @@ Generates printable worksheets for learning:
 
 ```
 data/
-  spain.json          ← geographic data in Castilian and Valencian
+  spain.json            ← geographic data in Castilian and Valencian
 scripts/
-  generate_svg.py     ← builds SVG map from GeoJSON source
+  generate_svg.py       ← builds both SVG maps from a public GeoJSON source
 maps/
-  spain.svg           ← generated map (run the script to create)
-worksheets/           ← generated PDF worksheets (coming in step 2)
-index.html            ← browser worksheet generator (coming in step 2)
+  provinces.svg         ← 52 provinces, coloured by community (generated)
+  communities.svg       ← 19 autonomous communities, dissolved geometry (generated)
+worksheets/             ← generated printable worksheets (coming in step 2)
+index.html              ← browser worksheet generator (coming in step 2)
 ```
 
 ## Setup
@@ -43,4 +44,5 @@ python scripts/generate_svg.py
 ```
 
 The script downloads province boundaries from a public GeoJSON source,
-combines them with data from `data/spain.json`, and saves a clean SVG to `maps/spain.svg`.
+dissolves them into autonomous communities for the second map,
+and saves both SVGs to the `maps/` folder.
