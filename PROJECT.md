@@ -240,3 +240,4 @@ Required sections:
 | 2026-06-09 | Removed GitHub curl protocol; added archive/ end-of-session protocol → [archive/2026-06-09-01.md](archive/2026-06-09-01.md) |
 | 2026-06-09 | index.html created — all 5 worksheet types, ES/VAL, print-ready → [archive/2026-06-09-02.md](archive/2026-06-09-02.md) |
 | 2026-06-09 | Archive protocol extended: Session log section added → [archive/2026-06-09-03.md](archive/2026-06-09-03.md) |
+| 2026-06-09 | Dynamic font size for map labels; Canary Islands inset fix attempted and reverted → [archive/2026-06-09-04.md](archive/2026-06-09-04.md) |
