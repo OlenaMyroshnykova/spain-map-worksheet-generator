@@ -150,41 +150,24 @@ Each comunidad is an SVG `<path>` with:
 - [x] `maps/provinces.svg` — 52 provinces, correct IDs and community colours
 - [x] `maps/communities.svg` — 19 comunidades, dissolved from province geometry
 - [x] `scripts/generate_svg.py` — working, no need to re-run unless data changes
+- [x] `index.html` — printable worksheet generator, all 5 sheet types, ES/VAL, print-ready
 
 ### Not done
-- [ ] `index.html` — printable worksheet generator (see Next Task below)
+- [ ] Step 2: Interactive browser exercises (click regions, score tracking)
 
 ---
 
-## Next Task: `index.html`
+## Next Task: Step 2 — Interactive exercises
 
-A single self-contained HTML file. No build step. Opens in browser, prints to A4.
+The worksheet generator (Step 1) is complete. Step 2 is interactive browser exercises.
 
-### Data loading
-- Fetch `spain.json` and both SVGs from GitHub raw URLs using `fetch()`
-- Embed SVG inline into DOM (not `<img>`) — required for JS to manipulate paths
+### Ideas for Step 2
 
-### UI controls (hidden on print)
-| Control | Options |
-|---------|---------|
-| Language | Castilian / Valencian |
-| Topic | Provincias / Comunidades |
-| Worksheet type | see below |
-| Randomize | regenerates random subsets |
-| Print | triggers `window.print()` |
-
-### Worksheet types
-| # | Name | Description |
-|---|------|-------------|
-| 1 | Mapa de referencia | Coloured map, all names labeled |
-| 2 | Mapa mudo | Outline map only, child writes names |
-| 3 | Colorea el mapa | Blank map + colour legend (random subset of regions) |
-| 4 | Tabla de referencia | Table: province / capital / comunidad |
-
-### Print layout
-- A4 portrait, `@media print` hides all UI chrome
-- Style: clean, child-friendly, edufichas.com aesthetic (dotted borders, clear fonts)
-- No external dependencies at print time
+- Click on a region → type or select its name → get instant feedback
+- Score counter + streak
+- Timed mode
+- Focus mode: only Comunitat Valenciana provinces
+- Could reuse the same SVG manipulation approach from index.html
 
 ---
 
@@ -249,3 +232,4 @@ Create `archive/YYYY-MM-DD-NN.md` (increment NN if multiple sessions on the same
 | 2026-06-09 | Confirmed repo structure: spain.json + both SVGs ready; index.html is next |
 | 2026-06-09 | PROJECT.md rewritten: added data reference, curl instructions, repo structure |
 | 2026-06-09 | Removed GitHub curl protocol; added archive/ end-of-session protocol → [archive/2026-06-09-01.md](archive/2026-06-09-01.md) |
+| 2026-06-09 | index.html created — all 5 worksheet types, ES/VAL, print-ready → [archive/2026-06-09-02.md](archive/2026-06-09-02.md) |

@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fichas de Geografía — España</title>
+<style>
+/* ===== RESET ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #edf2f7;
+  color: #1a202c;
+  min-height: 100vh;
+}
+
+/* ===== CONTROLS ===== */
+#controls {
+  background: #fff;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 10px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.ctrl-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.ctrl-group > label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-right: 2px;
+}
+.btn-toggle {
+  padding: 4px 11px;
+  border: 2px solid #cbd5e0;
+  border-radius: 20px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: #4a5568;
+  transition: all .15s;
+  line-height: 1.5;
+}
+.btn-toggle.active {
+  background: #4299e1;
+  border-color: #4299e1;
+  color: #fff;
+}
+.btn-toggle:hover:not(.active) { border-color: #90cdf4; color: #2b6cb0; }
+
+select {
+  padding: 4px 8px;
+  border: 2px solid #cbd5e0;
+  border-radius: 8px;
+  font-size: 12px;
+  background: #fff;
+  color: #2d3748;
+  cursor: pointer;
+}
+.btn-action {
+  padding: 5px 14px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition: background .15s;
+}
+#btn-randomize { background: #fbd38d; color: #7b341e; }
+#btn-randomize:hover { background: #f6ad55; }
+#btn-print { background: #9ae6b4; color: #1c4532; }
+#btn-print:hover { background: #68d391; }
+
+#qty-group { display: none; }
+
+/* ===== PAGE WRAPPER ===== */
+#sheet-wrap {
+  max-width: 820px;
+  margin: 24px auto 40px;
+  padding: 0 16px;
+}
+
+/* ===== WORKSHEET ===== */
+.worksheet {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.10);
+  padding: 28px 36px 32px;
+}
+
+/* ===== WORKSHEET HEADER ===== */
+.ws-header {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 2px dashed #bee3f8;
+}
+.ws-header-brand {
+  flex: 0 0 auto;
+}
+.ws-header-brand h1 {
+  font-size: 15px;
+  font-weight: 900;
+  color: #2b6cb0;
+  line-height: 1.25;
+}
+.ws-header-brand small {
+  font-size: 10px;
+  color: #90cdf4;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+.ws-fields {
+  display: flex;
+  gap: 18px;
+  flex: 1;
+  justify-content: flex-end;
+}
+.ws-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ws-field label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #a0aec0;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+.ws-field .ws-line {
+  height: 22px;
+  border-bottom: 1.5px dotted #a0aec0;
+}
+
+/* ===== WORKSHEET BODY ===== */
+.ws-title {
+  font-size: 17px;
+  font-weight: 900;
+  color: #2d3748;
+  text-align: center;
+  margin-bottom: 6px;
+}
+.ws-instr {
+  font-size: 11px;
+  color: #718096;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+/* ===== MAP ===== */
+.map-wrap { width: 100%; }
+.map-wrap svg { width: 100%; height: auto; display: block; }
+
+/* ===== ANSWER GRID (mudo) ===== */
+.answer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px 20px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1.5px dashed #bee3f8;
+}
+.answer-item {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 11px;
+}
+.answer-num {
+  font-weight: 800;
+  color: #3182ce;
+  min-width: 18px;
+  flex-shrink: 0;
+}
+.answer-line {
+  flex: 1;
+  border-bottom: 1px dotted #a0aec0;
+  min-height: 16px;
+}
+
+/* ===== COLOR LEGEND ===== */
+.color-legend {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 7px 28px;
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: #f7fafc;
+  border-radius: 8px;
+  border: 1.5px dashed #bee3f8;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+}
+.legend-swatch {
+  width: 22px;
+  height: 15px;
+  border-radius: 3px;
+  border: 1px solid rgba(0,0,0,.15);
+  flex-shrink: 0;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+/* ===== MATCH WORKSHEET ===== */
+.match-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 6px;
+}
+.match-col h3 {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4a5568;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 8px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid #e2e8f0;
+}
+.match-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 11.5px;
+  border-bottom: 1px dotted #e2e8f0;
+}
+.match-num  { font-weight: 800; color: #3182ce; min-width: 20px; flex-shrink: 0; }
+.match-letter { font-weight: 800; color: #b7791f; min-width: 20px; flex-shrink: 0; }
+.match-box {
+  margin-left: auto;
+  width: 30px;
+  height: 20px;
+  border: 1.5px solid #a0aec0;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* ===== REFERENCE TABLE ===== */
+.ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  margin-top: 6px;
+}
+.ref-table th {
+  background: #ebf8ff;
+  color: #2b6cb0;
+  font-weight: 700;
+  padding: 6px 10px;
+  text-align: left;
+  border: 1px solid #bee3f8;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.ref-table td {
+  padding: 5px 10px;
+  border: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+.ref-table tr:nth-child(even) td { background: #f7fafc; }
+.comm-dot {
+  display: inline-block;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+  flex-shrink: 0;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+/* ===== ERROR / LOADING ===== */
+#loading {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 15px;
+  color: #718096;
+}
+.error-box {
+  background: #fff5f5;
+  border: 2px solid #fc8181;
+  border-radius: 10px;
+  padding: 24px;
+  margin: 20px;
+  font-size: 13px;
+  color: #c53030;
+  line-height: 1.7;
+}
+.error-box code {
+  background: #fed7d7;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+/* ===== PRINT ===== */
+@media print {
+  body { background: #fff; }
+  #controls { display: none !important; }
+  #sheet-wrap { max-width: none; margin: 0; padding: 0; }
+  .worksheet { border-radius: 0; box-shadow: none; padding: 0; }
+  @page { size: A4 portrait; margin: 1.5cm; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== CONTROLS ===== -->
+<div id="controls">
+  <div class="ctrl-group">
+    <label>Idioma</label>
+    <button class="btn-toggle active" id="lang-es"  onclick="setLang('castilian')">ES</button>
+    <button class="btn-toggle"        id="lang-val" onclick="setLang('valencian')">VAL</button>
+  </div>
+  <div class="ctrl-group">
+    <label>Tema</label>
+    <button class="btn-toggle active" id="topic-prov" onclick="setTopic('provinces')">Provincias</button>
+    <button class="btn-toggle"        id="topic-comm" onclick="setTopic('communities')">Comunidades</button>
+  </div>
+  <div class="ctrl-group">
+    <label>Ficha</label>
+    <select id="sheet-select" onchange="setSheet(this.value)">
+      <option value="reference-map">Mapa de referencia</option>
+      <option value="mudo">Mapa mudo</option>
+      <option value="colorea">Colorea el mapa</option>
+      <option value="match">Empareja</option>
+      <option value="tabla">Tabla de referencia</option>
+    </select>
+  </div>
+  <div class="ctrl-group" id="qty-group">
+    <label>Cantidad</label>
+    <select id="qty-select" onchange="render()">
+      <option value="10">10</option>
+      <option value="15">15</option>
+      <option value="20">20</option>
+      <option value="all">Todas</option>
+    </select>
+  </div>
+  <button class="btn-action" id="btn-randomize" onclick="randomize()">&#x1F500; Mezclar</button>
+  <button class="btn-action" id="btn-print"     onclick="window.print()">&#x1F5A8; Imprimir</button>
+</div>
+
+<!-- ===== SHEET ===== -->
+<div id="sheet-wrap">
+  <div id="loading">Cargando datos&#x2026;</div>
+</div>
+
+<script>
+'use strict';
+
+// ── State ──────────────────────────────────────────────────────────────
+const S = { lang: 'castilian', topic: 'provinces', sheet: 'reference-map', seed: 1 };
+
+let DATA     = null;
+let SVG_PROV = null;
+let SVG_COMM = null;
+
+// ── Seeded RNG ─────────────────────────────────────────────────────────
+function makeRng(seed) {
+  let s = seed >>> 0;
+  return () => { s = (Math.imul(1664525, s) + 1013904223) >>> 0; return s / 0x100000000; };
+}
+function shuffle(arr, rng) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ── Load ───────────────────────────────────────────────────────────────
+async function loadAll() {
+  try {
+    const [dRes, pRes, cRes] = await Promise.all([
+      fetch('data/spain.json'),
+      fetch('maps/provinces.svg'),
+      fetch('maps/communities.svg'),
+    ]);
+    if (!dRes.ok) throw new Error('data/spain.json — ' + dRes.status);
+    DATA     = await dRes.json();
+    SVG_PROV = await pRes.text();
+    SVG_COMM = await cRes.text();
+    S.seed = 42;
+    render();
+  } catch (e) {
+    document.getElementById('sheet-wrap').innerHTML = `
+      <div class="error-box">
+        <strong>No se pueden cargar los datos.</strong><br><br>
+        Este archivo necesita un servidor local. Abre una terminal en la carpeta del proyecto y ejecuta:<br><br>
+        <code>python -m http.server 8000</code><br><br>
+        Luego abre: <code>http://localhost:8000</code><br><br>
+        <small style="color:#e53e3e">Error: ${e.message}</small>
+      </div>`;
+  }
+}
+
+// ── UI handlers ────────────────────────────────────────────────────────
+function setLang(lang) {
+  S.lang = lang;
+  document.getElementById('lang-es' ).classList.toggle('active', lang === 'castilian');
+  document.getElementById('lang-val').classList.toggle('active', lang === 'valencian');
+  render();
+}
+function setTopic(topic) {
+  S.topic = topic;
+  document.getElementById('topic-prov').classList.toggle('active', topic === 'provinces');
+  document.getElementById('topic-comm').classList.toggle('active', topic === 'communities');
+  render();
+}
+function setSheet(sheet) { S.sheet = sheet; render(); }
+function randomize() { S.seed = Date.now() & 0xffffffff; render(); }
+
+// ── Data helpers ───────────────────────────────────────────────────────
+const n    = item => item.names[S.lang];
+const cap  = item => item.capital[S.lang];
+const items = () => S.topic === 'provinces' ? DATA.provinces : DATA.autonomousCommunities;
+const svgStr = () => S.topic === 'provinces' ? SVG_PROV : SVG_COMM;
+const dataAttr = () => S.topic === 'provinces' ? 'data-province-id' : 'data-community-id';
+const pathSel  = () => `path[${dataAttr()}]`;
+const commByCode = code => DATA.autonomousCommunities.find(c => c.code === code);
+
+function subset() {
+  const val = document.getElementById('qty-select').value;
+  const all = items();
+  if (val === 'all') return shuffle(all, makeRng(S.seed));
+  return shuffle(all, makeRng(S.seed)).slice(0, parseInt(val));
+}
+
+// ── Parse SVG string → DOM element ─────────────────────────────────────
+function parseSVG(str) {
+  const div = document.createElement('div');
+  div.innerHTML = str;
+  const svg = div.firstElementChild;
+  svg.removeAttribute('width');
+  svg.removeAttribute('height');
+  svg.style.width  = '100%';
+  svg.style.height = 'auto';
+  return svg;
+}
+
+// ── Add text labels at path centroids (must be in DOM for getBBox) ─────
+function addLabels(svgEl, list, opts = {}) {
+  const ns   = 'http://www.w3.org/2000/svg';
+  const attr = dataAttr();
+  const size = opts.size || '6.5';
+  const minW = opts.minW || 14;
+
+  list.forEach((item, idx) => {
+    const path = svgEl.querySelector(`[${attr}="${item.id}"]`);
+    if (!path) return;
+    let bb;
+    try { bb = path.getBBox(); } catch (_) { return; }
+    if (bb.width < minW && bb.height < minW) return;
+    const cx = bb.x + bb.width  / 2;
+    const cy = bb.y + bb.height / 2;
+
+    if (opts.numbered) {
+      const g = document.createElementNS(ns, 'g');
+      const c = document.createElementNS(ns, 'circle');
+      c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', 7);
+      c.setAttribute('fill', '#fff'); c.setAttribute('stroke', '#2d3748'); c.setAttribute('stroke-width', '1');
+      const t = document.createElementNS(ns, 'text');
+      t.setAttribute('x', cx); t.setAttribute('y', cy);
+      t.setAttribute('text-anchor', 'middle'); t.setAttribute('dominant-baseline', 'middle');
+      t.setAttribute('font-size', '6'); t.setAttribute('font-weight', '800');
+      t.setAttribute('font-family', 'Segoe UI,Arial,sans-serif');
+      t.setAttribute('fill', '#1a202c'); t.setAttribute('pointer-events', 'none');
+      t.textContent = String(idx + 1);
+      g.appendChild(c); g.appendChild(t);
+      svgEl.appendChild(g);
+    } else {
+      // Multi-line label (split on space if long)
+      const label = n(item);
+      const words = label.split(' ');
+      const lines = words.length > 2 ? [words.slice(0, Math.ceil(words.length/2)).join(' '), words.slice(Math.ceil(words.length/2)).join(' ')] : [label];
+      const lineH = parseFloat(size) * 1.2;
+      const startY = cy - (lines.length - 1) * lineH / 2;
+
+      lines.forEach((line, li) => {
+        const t = document.createElementNS(ns, 'text');
+        t.setAttribute('x', cx); t.setAttribute('y', startY + li * lineH);
+        t.setAttribute('text-anchor', 'middle'); t.setAttribute('dominant-baseline', 'middle');
+        t.setAttribute('font-size', size); t.setAttribute('font-weight', '600');
+        t.setAttribute('font-family', 'Segoe UI,Arial,sans-serif');
+        t.setAttribute('fill', opts.fill || '#1a202c'); t.setAttribute('pointer-events', 'none');
+        // white halo for legibility
+        const bg = t.cloneNode(false);
+        bg.setAttribute('stroke', '#fff'); bg.setAttribute('stroke-width', '2.5');
+        bg.setAttribute('stroke-linejoin', 'round'); bg.setAttribute('paint-order', 'stroke');
+        bg.setAttribute('fill', 'none');
+        bg.textContent = line;
+        t.textContent = line;
+        svgEl.appendChild(bg);
+        svgEl.appendChild(t);
+      });
+    }
+  });
+}
+
+// ── Worksheet header ───────────────────────────────────────────────────
+function headerHTML() {
+  const L = S.lang === 'castilian'
+    ? { n: 'Nombre', f: 'Fecha', c: 'Curso' }
+    : { n: 'Nom',    f: 'Data',  c: 'Curs'  };
+  return `
+    <div class="ws-header">
+      <div class="ws-header-brand">
+        <small>Geografía</small>
+        <h1>España</h1>
+      </div>
+      <div class="ws-fields">
+        <div class="ws-field">
+          <label>${L.n}</label><div class="ws-line" style="width:160px"></div>
+        </div>
+        <div class="ws-field">
+          <label>${L.f}</label><div class="ws-line" style="width:80px"></div>
+        </div>
+        <div class="ws-field">
+          <label>${L.c}</label><div class="ws-line" style="width:60px"></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Titles ─────────────────────────────────────────────────────────────
+const TITLES = {
+  'reference-map': { castilian: { provinces: 'Mapa de provincias',                   communities: 'Comunidades autónomas de España' },
+                     valencian:  { provinces: 'Mapa de províncies',                   communities: 'Comunitats autònomes d\'Espanya'  } },
+  'mudo':          { castilian: { provinces: 'Mapa mudo — escribe los nombres',        communities: 'Mapa mudo — escribe los nombres'        },
+                     valencian:  { provinces: 'Mapa mut — escriu els noms',             communities: 'Mapa mut — escriu els noms'             } },
+  'colorea':       { castilian: { provinces: 'Colorea las provincias',                  communities: 'Colorea las comunidades'                },
+                     valencian:  { provinces: 'Pinta les províncies',                   communities: 'Pinta les comunitats'                   } },
+  'match':         { castilian: { provinces: 'Empareja: provincia → comunidad',         communities: 'Empareja: provincia → comunidad'        },
+                     valencian:  { provinces: 'Emparella: província → comunitat',       communities: 'Emparella: província → comunitat'       } },
+  'tabla':         { castilian: { provinces: 'Tabla de provincias',                     communities: 'Tabla de comunidades autónomas'         },
+                     valencian:  { provinces: 'Taula de províncies',                    communities: 'Taula de comunitats autònomes'          } },
+};
+
+// ── Main render ────────────────────────────────────────────────────────
+function render() {
+  if (!DATA) return;
+
+  const title = TITLES[S.sheet][S.lang][S.topic];
+
+  const qtySheets = ['mudo', 'colorea', 'match'];
+  document.getElementById('qty-group').style.display = qtySheets.includes(S.sheet) ? 'flex' : 'none';
+
+  const wrap = document.getElementById('sheet-wrap');
+  wrap.innerHTML = `
+    <div class="worksheet">
+      ${headerHTML()}
+      <h2 class="ws-title">${title}</h2>
+      <div id="ws-body"></div>
+    </div>`;
+
+  const body = document.getElementById('ws-body');
+
+  switch (S.sheet) {
+    case 'reference-map': renderReferenceMap(body); break;
+    case 'mudo':          renderMudo(body);          break;
+    case 'colorea':       renderColorea(body);       break;
+    case 'match':         renderMatch(body);         break;
+    case 'tabla':         renderTabla(body);         break;
+  }
+}
+
+// ── 1. Mapa de referencia ──────────────────────────────────────────────
+function renderReferenceMap(body) {
+  const svg = parseSVG(svgStr());
+  const wrap = document.createElement('div');
+  wrap.className = 'map-wrap';
+  wrap.appendChild(svg);
+  body.appendChild(wrap);
+
+  requestAnimationFrame(() => {
+    addLabels(svg, items(), { size: S.topic === 'provinces' ? '6' : '8', minW: 12 });
+  });
+}
+
+// ── 2. Mapa mudo ───────────────────────────────────────────────────────
+function renderMudo(body) {
+  const sel = subset();
+  const svg = parseSVG(svgStr());
+
+  // All paths → grey outline
+  svg.querySelectorAll(pathSel()).forEach(p => {
+    p.setAttribute('fill', '#efefef');
+    p.setAttribute('stroke', '#999');
+    p.setAttribute('stroke-width', '0.6');
+  });
+
+  const wrap = document.createElement('div');
+  wrap.className = 'map-wrap';
+  wrap.appendChild(svg);
+  body.appendChild(wrap);
+
+  requestAnimationFrame(() => {
+    addLabels(svg, sel, { numbered: true, minW: 10 });
+
+    const instr = S.lang === 'castilian'
+      ? 'Escribe el nombre de cada región según el número del mapa.'
+      : 'Escriu el nom de cada regió segons el número del mapa.';
+    const p = document.createElement('p');
+    p.className = 'ws-instr'; p.textContent = instr;
+    body.appendChild(p);
+
+    const grid = document.createElement('div');
+    grid.className = 'answer-grid';
+    sel.forEach((_, i) => {
+      const div = document.createElement('div');
+      div.className = 'answer-item';
+      div.innerHTML = `<span class="answer-num">${i + 1}.</span><span class="answer-line"></span>`;
+      grid.appendChild(div);
+    });
+    body.appendChild(grid);
+  });
+}
+
+// ── 3. Colorea el mapa ─────────────────────────────────────────────────
+const COLORS = [
+  { es: 'rojo',        val: 'roig',        bg: '#fc8181' },
+  { es: 'azul',        val: 'blau',        bg: '#63b3ed' },
+  { es: 'verde',       val: 'verd',        bg: '#68d391' },
+  { es: 'amarillo',    val: 'groc',        bg: '#f6e05e' },
+  { es: 'naranja',     val: 'taronja',     bg: '#fbd38d' },
+  { es: 'morado',      val: 'morat',       bg: '#b794f4' },
+  { es: 'rosa',        val: 'rosa',        bg: '#fbb6ce' },
+  { es: 'marrón',      val: 'marró',       bg: '#c6a87a' },
+  { es: 'azul claro',  val: 'blau clar',   bg: '#90cdf4' },
+  { es: 'verde claro', val: 'verd clar',   bg: '#9ae6b4' },
+];
+
+function renderColorea(body) {
+  const sel    = subset().slice(0, COLORS.length);
+  const colors = shuffle(COLORS, makeRng(S.seed + 99)).slice(0, sel.length);
+
+  const svg = parseSVG(svgStr());
+  svg.querySelectorAll(pathSel()).forEach(p => {
+    p.setAttribute('fill', '#f5f5f5');
+    p.setAttribute('stroke', '#bbb');
+    p.setAttribute('stroke-width', '0.6');
+  });
+
+  const attr = dataAttr();
+  sel.forEach(item => {
+    const p = svg.querySelector(`[${attr}="${item.id}"]`);
+    if (p) { p.setAttribute('fill', '#fff'); p.setAttribute('stroke', '#666'); p.setAttribute('stroke-width', '1'); }
+  });
+
+  const wrap = document.createElement('div');
+  wrap.className = 'map-wrap';
+  wrap.appendChild(svg);
+  body.appendChild(wrap);
+
+  const instr = S.lang === 'castilian'
+    ? 'Colorea cada región según las instrucciones.'
+    : 'Pinta cada regió seguint les instruccions.';
+  const instrEl = document.createElement('p');
+  instrEl.className = 'ws-instr'; instrEl.textContent = instr;
+  body.appendChild(instrEl);
+
+  const legend = document.createElement('div');
+  legend.className = 'color-legend';
+  const pintaEs = S.lang === 'castilian' ? 'Pinta' : 'Pinta';
+  const deWord  = S.lang === 'castilian' ? 'de'    : 'de';
+
+  sel.forEach((item, i) => {
+    const c = colors[i];
+    const colorName = S.lang === 'castilian' ? c.es : c.val;
+    const li = document.createElement('div');
+    li.className = 'legend-item';
+    li.innerHTML = `<div class="legend-swatch" style="background:${c.bg}"></div>
+      <span>${pintaEs} <strong>${n(item)}</strong> ${deWord} ${colorName}</span>`;
+    legend.appendChild(li);
+  });
+  body.appendChild(legend);
+
+  requestAnimationFrame(() => addLabels(svg, sel, { size: '6', minW: 10 }));
+}
+
+// ── 4. Empareja ────────────────────────────────────────────────────────
+function renderMatch(body) {
+  const rng   = makeRng(S.seed);
+  const val   = document.getElementById('qty-select').value;
+  const count = val === 'all' ? Math.min(DATA.provinces.length, 26) : Math.min(parseInt(val), 26);
+
+  const provs = shuffle(DATA.provinces, rng).slice(0, count);
+  const usedCodes = [...new Set(provs.map(p => p.communityCode))];
+  const comms = shuffle(
+    DATA.autonomousCommunities.filter(c => usedCodes.includes(c.code)),
+    makeRng(S.seed + 7)
+  );
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+  const instr = S.lang === 'castilian'
+    ? 'Escribe la letra de la comunidad autónoma a la que pertenece cada provincia.'
+    : 'Escriu la lletra de la comunitat autònoma a la qual pertany cada província.';
+  const provTitle = S.lang === 'castilian' ? 'Provincias' : 'Províncies';
+  const commTitle = S.lang === 'castilian' ? 'Comunidades autónomas' : 'Comunitats autònomes';
+
+  const sub = document.createElement('p');
+  sub.className = 'ws-instr'; sub.textContent = instr;
+  body.appendChild(sub);
+
+  const grid = document.createElement('div');
+  grid.className = 'match-grid';
+
+  // Left: numbered provinces + answer box
+  const left = document.createElement('div');
+  left.className = 'match-col';
+  left.innerHTML = `<h3>${provTitle}</h3>`;
+  provs.forEach((prov, i) => {
+    const div = document.createElement('div');
+    div.className = 'match-item';
+    div.innerHTML = `<span class="match-num">${i + 1}.</span><span>${n(prov)}</span><div class="match-box"></div>`;
+    left.appendChild(div);
+  });
+
+  // Right: lettered communities
+  const right = document.createElement('div');
+  right.className = 'match-col';
+  right.innerHTML = `<h3>${commTitle}</h3>`;
+  comms.forEach((comm, i) => {
+    const div = document.createElement('div');
+    div.className = 'match-item';
+    div.innerHTML = `<span class="match-letter">${letters[i]}.</span><span>${n(comm)}</span>`;
+    right.appendChild(div);
+  });
+
+  grid.appendChild(left);
+  grid.appendChild(right);
+  body.appendChild(grid);
+}
+
+// ── 5. Tabla de referencia ─────────────────────────────────────────────
+function renderTabla(body) {
+  const list = items().slice().sort((a, b) => n(a).localeCompare(n(b), S.lang === 'castilian' ? 'es' : 'ca'));
+
+  const table = document.createElement('table');
+  table.className = 'ref-table';
+
+  if (S.topic === 'provinces') {
+    const [h1, h2, h3] = S.lang === 'castilian'
+      ? ['Provincia', 'Capital', 'Comunidad Autónoma']
+      : ['Província', 'Capital', 'Comunitat Autònoma'];
+    table.innerHTML = `<thead><tr><th>${h1}</th><th>${h2}</th><th>${h3}</th></tr></thead>`;
+    const tbody = document.createElement('tbody');
+    list.forEach(prov => {
+      const comm = commByCode(prov.communityCode);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${n(prov)}</td>
+        <td>${cap(prov)}</td>
+        <td><span class="comm-dot" style="background:${comm ? comm.mapColor : '#ccc'};print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>${comm ? n(comm) : '—'}</td>`;
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+  } else {
+    const [h1, h2] = S.lang === 'castilian'
+      ? ['Comunidad Autónoma', 'Capital']
+      : ['Comunitat Autònoma', 'Capital'];
+    table.innerHTML = `<thead><tr><th>${h1}</th><th>${h2}</th></tr></thead>`;
+    const tbody = document.createElement('tbody');
+    list.forEach(comm => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="comm-dot" style="background:${comm.mapColor};print-color-adjust:exact;-webkit-print-color-adjust:exact"></span>${n(comm)}</td>
+        <td>${cap(comm)}</td>`;
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+  }
+
+  body.appendChild(table);
+}
+
+// ── Init ───────────────────────────────────────────────────────────────
+loadAll();
+</script>
+</body>
+</html>
