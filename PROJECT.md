@@ -207,10 +207,16 @@ When the conversation reaches ~15 messages OR a feature is complete:
 
 **Step 1: Create an archive note**
 
-Create `archive/YYYY-MM-DD-NN.md` (increment NN if multiple sessions on the same day):
-- What was accomplished this session
-- What is next
-- Key decisions made
+Create `archive/YYYY-MM-DD-NN.md` (increment NN if multiple sessions on the same day).
+
+Required sections:
+
+- **Accomplished** — completed tasks
+- **Next** — what comes next with enough context to resume
+- **Key decisions** — technical choices and reasons
+- **Session log** — a short human-readable summary of the conversation, written
+  in Russian, 5–15 bullet points in plain language: what the parent asked,
+  what was discussed, what was chosen and why.
 
 **Step 2: Update PROJECT.md**
 
