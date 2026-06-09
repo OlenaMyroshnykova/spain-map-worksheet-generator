@@ -468,7 +468,6 @@ function parseSVG(str) {
 function addLabels(svgEl, list, opts = {}) {
   const ns   = 'http://www.w3.org/2000/svg';
   const attr = dataAttr();
-  const size = opts.size || '6.5';
   const minW = opts.minW || 14;
 
   list.forEach((item, idx) => {
@@ -479,6 +478,9 @@ function addLabels(svgEl, list, opts = {}) {
     if (bb.width < minW && bb.height < minW) return;
     const cx = bb.x + bb.width  / 2;
     const cy = bb.y + bb.height / 2;
+
+    // Font size proportional to region area, clamped between 5.5 and 14
+    const size = Math.max(5.5, Math.min(14, Math.sqrt(bb.width * bb.height) * 0.085));
 
     if (opts.numbered) {
       const g = document.createElementNS(ns, 'g');
@@ -495,11 +497,13 @@ function addLabels(svgEl, list, opts = {}) {
       g.appendChild(c); g.appendChild(t);
       svgEl.appendChild(g);
     } else {
-      // Multi-line label (split on space if long)
+      // Split into two lines only if region is large enough to fit them
       const label = n(item);
       const words = label.split(' ');
-      const lines = words.length > 2 ? [words.slice(0, Math.ceil(words.length/2)).join(' '), words.slice(Math.ceil(words.length/2)).join(' ')] : [label];
-      const lineH = parseFloat(size) * 1.2;
+      const lines = (words.length > 2 && size >= 7)
+        ? [words.slice(0, Math.ceil(words.length/2)).join(' '), words.slice(Math.ceil(words.length/2)).join(' ')]
+        : [label];
+      const lineH = size * 1.2;
       const startY = cy - (lines.length - 1) * lineH / 2;
 
       lines.forEach((line, li) => {
@@ -599,7 +603,7 @@ function renderReferenceMap(body) {
   body.appendChild(wrap);
 
   requestAnimationFrame(() => {
-    addLabels(svg, items(), { size: S.topic === 'provinces' ? '6' : '8', minW: 12 });
+    addLabels(svg, items(), { minW: 12 });
   });
 }
 
@@ -701,7 +705,7 @@ function renderColorea(body) {
   });
   body.appendChild(legend);
 
-  requestAnimationFrame(() => addLabels(svg, sel, { size: '6', minW: 10 }));
+  requestAnimationFrame(() => addLabels(svg, sel, { minW: 10 }));
 }
 
 // ── 4. Empareja ────────────────────────────────────────────────────────
