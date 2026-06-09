@@ -461,6 +461,23 @@ function parseSVG(str) {
   svg.removeAttribute('height');
   svg.style.width  = '100%';
   svg.style.height = 'auto';
+
+  // Add white background behind the Canary Islands inset so mainland doesn't show through
+  const insetGroup = svg.querySelector('#canary-islands-inset');
+  if (insetGroup) {
+    const insetRect = insetGroup.querySelector('rect.inset-border');
+    if (insetRect) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const bg = document.createElementNS(ns, 'rect');
+      bg.setAttribute('x',      insetRect.getAttribute('x'));
+      bg.setAttribute('y',      insetRect.getAttribute('y'));
+      bg.setAttribute('width',  insetRect.getAttribute('width'));
+      bg.setAttribute('height', insetRect.getAttribute('height'));
+      bg.setAttribute('fill', '#fff');
+      svg.insertBefore(bg, insetGroup);
+    }
+  }
+
   return svg;
 }
 
