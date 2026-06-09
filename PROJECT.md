@@ -59,17 +59,21 @@ spain-map-worksheet-generator/
 │   └── spain.json              # All geographic data, bilingual ES + VAL
 │
 ├── maps/
-│   ├── provinces.svg           # 52 provinces (pre-generated, do not edit manually)
-│   └── communities.svg         # 19 comunidades (pre-generated, do not edit manually)
+│   ├── provinces.svg           # 52 provinces + Canary Islands inset + Africa strip
+│   └── communities.svg         # 19 comunidades
 │
 ├── scripts/
 │   └── generate_svg.py         # Generates both SVGs from public GeoJSON — already run
 │
+├── .claude/
+│   └── settings.json           # SessionStart hook (confirms CLAUDE.md read)
+│
 ├── archive/                    # End-of-session notes (one .md file per session)
+├── CLAUDE.md                   # Project description + session start protocol for Claude
 ├── requirements.txt            # Python deps for generate_svg.py
 ├── README.md
 ├── PROJECT.md                  # ← you are here
-└── index.html                  # ← NOT YET CREATED (next task)
+└── index.html                  # Worksheet generator — 5 sheet types, ES/VAL, print-ready
 ```
 
 ---
@@ -147,10 +151,12 @@ Each comunidad is an SVG `<path>` with:
 
 ### Done
 - [x] `data/spain.json` — complete, all 52 provinces + 19 comunidades, bilingual
-- [x] `maps/provinces.svg` — 52 provinces, correct IDs and community colours
+- [x] `maps/provinces.svg` — 52 provinces, Canary Islands inset (below mainland), Africa strip with Ceuta + Melilla
 - [x] `maps/communities.svg` — 19 comunidades, dissolved from province geometry
 - [x] `scripts/generate_svg.py` — working, no need to re-run unless data changes
 - [x] `index.html` — printable worksheet generator, all 5 sheet types, ES/VAL, print-ready
+- [x] `CLAUDE.md` — session start confirmation protocol
+- [x] Print layout — A4 landscape, sidebar header, map fills ~196×174mm
 
 ### Not done
 - [ ] Step 2: Interactive browser exercises (click regions, score tracking)
@@ -159,7 +165,7 @@ Each comunidad is an SVG `<path>` with:
 
 ## Next Task: Step 2 — Interactive exercises
 
-The worksheet generator (Step 1) is complete. Step 2 is interactive browser exercises.
+Step 1 (printable worksheets) is fully complete. Step 2 is interactive browser exercises.
 
 ### Ideas for Step 2
 
@@ -167,7 +173,7 @@ The worksheet generator (Step 1) is complete. Step 2 is interactive browser exer
 - Score counter + streak
 - Timed mode
 - Focus mode: only Comunitat Valenciana provinces
-- Could reuse the same SVG manipulation approach from index.html
+- Can reuse the same SVG manipulation approach from `index.html`
 
 ---
 
@@ -241,3 +247,5 @@ Required sections:
 | 2026-06-09 | index.html created — all 5 worksheet types, ES/VAL, print-ready → [archive/2026-06-09-02.md](archive/2026-06-09-02.md) |
 | 2026-06-09 | Archive protocol extended: Session log section added → [archive/2026-06-09-03.md](archive/2026-06-09-03.md) |
 | 2026-06-09 | Dynamic font size for map labels; Canary Islands inset fix attempted and reverted → [archive/2026-06-09-04.md](archive/2026-06-09-04.md) |
+| 2026-06-09 | Canary Islands inset moved below mainland (SVG canvas 900×800); verified with Playwright → [archive/2026-06-09-05.md](archive/2026-06-09-05.md) |
+| 2026-06-09 | CLAUDE.md + session hook; Canary Islands label fix (baked coords); Africa strip; print layout optimized → [archive/2026-06-09-06.md](archive/2026-06-09-06.md) |
