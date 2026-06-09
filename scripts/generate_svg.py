@@ -46,13 +46,13 @@ GEOJSON_URL = (
 # ---------------------------------------------------------------------------
 
 SVG_WIDTH = 900
-SVG_HEIGHT = 700
+SVG_HEIGHT = 800
 
-# Canary Islands are far west — render them in a small inset box.
-INSET_X = 30
-INSET_Y = 530
-INSET_WIDTH = 200
-INSET_HEIGHT = 130
+# Canary Islands are far west — render them in a small inset box below the mainland.
+INSET_X = 10
+INSET_Y = 705
+INSET_WIDTH = 230
+INSET_HEIGHT = 88
 
 MAINLAND_BOUNDS = {
     "min_lon": -9.5,
