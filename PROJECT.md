@@ -65,6 +65,7 @@ spain-map-worksheet-generator/
 ├── scripts/
 │   └── generate_svg.py         # Generates both SVGs from public GeoJSON — already run
 │
+├── archive/                    # End-of-session notes (one .md file per session)
 ├── requirements.txt            # Python deps for generate_svg.py
 ├── README.md
 ├── PROJECT.md                  # ← you are here
@@ -193,21 +194,11 @@ A single self-contained HTML file. No build step. Opens in browser, prints to A4
 
 **Step 1: Read this file**
 
-Use `bash_tool` with `curl`. Do NOT use `web_fetch` for raw.githubusercontent.com
-URLs — it requires a prior search result and will fail.
-
-```bash
-curl https://raw.githubusercontent.com/OlenaMyroshnykova/spain-map-worksheet-generator/main/PROJECT.md
-```
+Read `PROJECT.md` directly from the local working directory — no curl or network needed.
 
 **Step 2: Check actual repo state**
 
-`web_fetch` works fine for the GitHub HTML page:
-```
-https://github.com/OlenaMyroshnykova/spain-map-worksheet-generator
-```
-
-This shows real file list and latest commits — use it to verify PROJECT.md is current.
+Run `git log --oneline` and list the working directory to confirm local file state matches PROJECT.md.
 
 **Step 3: Greet parent in Russian**
 
@@ -231,14 +222,22 @@ When the conversation reaches ~15 messages OR a feature is complete:
 
 > "Пора открыть новый чат — контекст заполняется. Сейчас обновлю PROJECT.md."
 
-Then produce an updated PROJECT.md with:
+**Step 1: Create an archive note**
+
+Create `archive/YYYY-MM-DD-NN.md` (increment NN if multiple sessions on the same day):
+- What was accomplished this session
+- What is next
+- Key decisions made
+
+**Step 2: Update PROJECT.md**
+
 - **Status** checklist updated
 - **Next Task** updated to reflect what actually comes next
 - **Repository Structure** updated if files were added
-- **Changelog** entry added
+- **Changelog** entry added (link to archive note)
 - Any new decisions recorded
 
-**Do not skip this step.** PROJECT.md is the only memory that survives between sessions.
+**Do not skip either step.** PROJECT.md + `archive/` are the only memory that survives between sessions.
 
 ---
 
@@ -249,3 +248,4 @@ Then produce an updated PROJECT.md with:
 | 2026-06-09 | Project started, PROJECT.md created |
 | 2026-06-09 | Confirmed repo structure: spain.json + both SVGs ready; index.html is next |
 | 2026-06-09 | PROJECT.md rewritten: added data reference, curl instructions, repo structure |
+| 2026-06-09 | Removed GitHub curl protocol; added archive/ end-of-session protocol → [archive/2026-06-09-01.md](archive/2026-06-09-01.md) |
