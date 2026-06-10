@@ -25,9 +25,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import geopandas as gpd
-from shapely import set_precision
 from shapely.geometry import GeometryCollection, MultiPolygon, Polygon, box as shapely_box
-from shapely.ops import unary_union
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -48,6 +46,20 @@ AFRICA_GEOJSON_URL = (
     "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/"
     "master/geojson/ne_50m_admin_0_countries.geojson"
 )
+
+# es-atlas TopoJSON — autonomous communities geometry (purpose-built, no dissolve needed).
+COMMUNITIES_TOPOJSON_URL = (
+    "https://cdn.jsdelivr.net/npm/es-atlas@0.6.0/es/autonomous_regions.json"
+)
+
+# Maps es-atlas community IDs → our spain.json community codes.
+ES_ATLAS_TO_SPAIN_CODE = {
+    "01": "01", "02": "02", "03": "18", "04": "03", "05": "04",
+    "06": "05", "07": "07", "08": "06", "09": "08", "10": "19",
+    "11": "10", "12": "11", "13": "13", "14": "15", "15": "16",
+    "16": "17", "17": "12", "18": "09", "19": "14",
+    # "20" = Gibraltar, omitted intentionally
+}
 
 # ---------------------------------------------------------------------------
 # SVG canvas settings
@@ -114,6 +126,19 @@ def download_geojson(url: str) -> gpd.GeoDataFrame:
     with urllib.request.urlopen(url) as response:
         raw = response.read()
     return gpd.read_file(io.BytesIO(raw))
+
+
+def download_communities_geojson() -> gpd.GeoDataFrame:
+    """Download es-atlas autonomous regions TopoJSON and return as GeoDataFrame
+    with a cod_ccaa column matching our spain.json community codes."""
+    print(f"  Downloading: {COMMUNITIES_TOPOJSON_URL}")
+    with urllib.request.urlopen(COMMUNITIES_TOPOJSON_URL) as response:
+        raw = response.read()
+    gdf = gpd.read_file(io.BytesIO(raw), driver="TopoJSON", layer="autonomous_regions")
+    gdf = gdf[gdf["id"].isin(ES_ATLAS_TO_SPAIN_CODE)].copy()
+    gdf["cod_ccaa"] = gdf["id"].map(ES_ATLAS_TO_SPAIN_CODE)
+    print(f"  Loaded {len(gdf)} autonomous communities.")
+    return gdf
 
 
 def download_africa_context(url: str) -> "gpd.GeoDataFrame | None":
@@ -348,61 +373,13 @@ def build_provinces_svg(
     return svg
 
 
-def dissolve_communities_clean(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-    """
-    Dissolve provinces into communities with no visible province-border artifacts.
-
-    Province edges in the source GeoJSON are often slightly misaligned, leaving
-    tiny gaps or slivers after a plain dissolve().  Fix:
-      1. Buffer each province by SNAP to close micro-gaps between neighbors.
-      2. unary_union the buffered group → clean merged shape.
-      3. Shrink back by SNAP to restore original outline.
-      4. Drop sub-polygons smaller than MIN_AREA (stray slivers).
-      5. Drop interior rings (holes) smaller than MIN_HOLE_AREA (gap artifacts).
-    """
-    # Snap to 0.001° grid (~100 m) so adjacent province edges share exact coordinates,
-    # then union — eliminates gaps and slivers without distorting the visible outline.
-    GRID = 0.001
-    MIN_AREA = 1e-5      # ~0.12 km² — keeps real islands, drops leftover slivers
-    MIN_HOLE_AREA = 1e-4 # ~1.2 km² — keeps real enclaves, drops gap holes
-
-    rows = []
-    for code, group in gdf.groupby("cod_ccaa"):
-        snapped = [set_precision(g, grid_size=GRID) for g in group.geometry]
-        merged = unary_union(snapped)
-
-        if isinstance(merged, Polygon):
-            polys = [merged]
-        elif isinstance(merged, MultiPolygon):
-            polys = list(merged.geoms)
-        else:
-            polys = [g for g in merged.geoms if isinstance(g, (Polygon, MultiPolygon))]
-
-        clean_polys = []
-        for p in polys:
-            if p.area < MIN_AREA:
-                continue
-            kept_holes = [h for h in p.interiors if Polygon(h).area >= MIN_HOLE_AREA]
-            clean_polys.append(Polygon(p.exterior.coords, [list(h.coords) for h in kept_holes]))
-
-        if not clean_polys:
-            continue
-        clean_geom = clean_polys[0] if len(clean_polys) == 1 else MultiPolygon(clean_polys)
-        rows.append({"cod_ccaa": code, "geometry": clean_geom})
-    return gpd.GeoDataFrame(rows, crs=gdf.crs)
-
-
 def build_communities_svg(
-    gdf: gpd.GeoDataFrame,
+    communities_gdf: gpd.GeoDataFrame,
     community_colors: dict,
     community_ids: dict,
     africa_gdf: "gpd.GeoDataFrame | None" = None,
 ) -> ET.Element:
-    """
-    Build SVG with one <path> per autonomous community.
-    Provinces are dissolved into their community geometry before rendering.
-    """
-    communities_gdf = dissolve_communities_clean(gdf)
+    """Build SVG with one <path> per autonomous community (es-atlas source)."""
 
     svg = make_svg_root()
     ET.SubElement(svg, "style").text = COMMUNITIES_STYLE
@@ -481,20 +458,21 @@ def main(communities_only: bool = False) -> None:
     community_ids = build_community_id_map(spain_data)
     province_ids = build_province_id_map(spain_data)
 
-    print("Downloading province boundaries...")
-    gdf = download_geojson(GEOJSON_URL)
-    print(f"  Loaded {len(gdf)} provinces.\n")
-
     print("Downloading Africa context (Morocco + Algeria)...")
     africa_gdf = download_africa_context(AFRICA_GEOJSON_URL)
 
     if not communities_only:
+        print("\nDownloading province boundaries...")
+        prov_gdf = download_geojson(GEOJSON_URL)
+        print(f"  Loaded {len(prov_gdf)} provinces.")
         print("\nBuilding provinces.svg...")
-        provinces_svg = build_provinces_svg(gdf, community_colors, province_ids, africa_gdf)
+        provinces_svg = build_provinces_svg(prov_gdf, community_colors, province_ids, africa_gdf)
         write_svg(provinces_svg, OUTPUT_PROVINCES)
 
+    print("\nDownloading community boundaries (es-atlas)...")
+    comm_gdf = download_communities_geojson()
     print("\nBuilding communities.svg...")
-    communities_svg = build_communities_svg(gdf, community_colors, community_ids, africa_gdf)
+    communities_svg = build_communities_svg(comm_gdf, community_colors, community_ids, africa_gdf)
     write_svg(communities_svg, OUTPUT_COMMUNITIES)
 
     print("\nDone.")
