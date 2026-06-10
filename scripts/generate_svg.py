@@ -68,16 +68,16 @@ ES_ATLAS_TO_SPAIN_CODE = {
 SVG_WIDTH = 900
 SVG_HEIGHT = 800
 
-# Canary Islands are far west — render them in a small inset box below the mainland.
+# Canary Islands inset — positioned in the Atlantic Ocean space south-west of the mainland.
 INSET_X = 10
-INSET_Y = 705
-INSET_WIDTH = 230
-INSET_HEIGHT = 88
+INSET_Y = 615
+INSET_WIDTH = 265
+INSET_HEIGHT = 115
 
 MAINLAND_BOUNDS = {
     "min_lon": -9.5,
     "max_lon": 4.4,
-    "min_lat": 33.0,
+    "min_lat": 35.0,   # was 33.0 — raised to trim Africa strip to a thin coastal sliver
     "max_lat": 43.8,
 }
 
@@ -223,6 +223,8 @@ def geometry_to_path_data(
                 polys.extend(g.geoms)
     else:
         return ""
+    # Filter out micro-sliver artifacts (area < 1e-4 sq geographic degrees)
+    polys = [p for p in polys if p.area >= 1e-4]
     return " ".join(polygon_to_path_data(p, bounds, canvas_w, canvas_h) for p in polys)
 
 
@@ -291,7 +293,7 @@ def add_africa_strip(parent: ET.Element, africa_gdf: "gpd.GeoDataFrame | None" =
 
     ET.SubElement(group, "path", {
         "id": "africa-strip",
-        "fill": "#CCCCCC",
+        "fill": "none",
         "d": strip_d,
     })
 
@@ -299,6 +301,14 @@ def add_africa_strip(parent: ET.Element, africa_gdf: "gpd.GeoDataFrame | None" =
 def add_inset_frame(parent: ET.Element, label: str) -> ET.Element:
     """Add the Canary Islands inset box and return a <g> to place paths in."""
     group = ET.SubElement(parent, "g", {"id": "canary-islands-inset"})
+    # White background so the inset overlays any province paths cleanly
+    ET.SubElement(group, "rect", {
+        "x": str(INSET_X),
+        "y": str(INSET_Y),
+        "width": str(INSET_WIDTH),
+        "height": str(INSET_HEIGHT),
+        "fill": "white",
+    })
     ET.SubElement(group, "rect", {
         "x": str(INSET_X),
         "y": str(INSET_Y),
@@ -370,6 +380,7 @@ def build_provinces_svg(
         }
         add_path(inset if canary else mainland, path_data, attrs, is_inset=canary)
 
+    add_enclave_markers(svg)
     return svg
 
 
@@ -424,12 +435,36 @@ def build_communities_svg(
             attrs["transform"] = f"translate({INSET_X},{INSET_Y})"
         ET.SubElement(borders, "path", attrs)
 
+    add_enclave_markers(svg)
     return svg
 
 
 # ---------------------------------------------------------------------------
 # File writer
 # ---------------------------------------------------------------------------
+
+
+def add_enclave_markers(svg: ET.Element) -> None:
+    """Add small bracket tick marks around Ceuta and Melilla to separate them from Africa."""
+    # Compute SVG pixel positions from geographic coordinates
+    ceuta_lon, ceuta_lat = -5.31, 35.89
+    melilla_lon, melilla_lat = -2.95, 35.29
+    cx, cy = project_to_svg(ceuta_lon, ceuta_lat, MAINLAND_BOUNDS, SVG_WIDTH, SVG_HEIGHT)
+    mx, my = project_to_svg(melilla_lon, melilla_lat, MAINLAND_BOUNDS, SVG_WIDTH, SVG_HEIGHT)
+
+    group = ET.SubElement(svg, "g", {
+        "id": "enclave-markers",
+        "style": "stroke:#777;stroke-width:1.3;pointer-events:none",
+    })
+    for px, py in [(cx, cy), (mx, my)]:
+        ET.SubElement(group, "line", {
+            "x1": str(round(px - 8, 1)), "y1": str(round(py - 6, 1)),
+            "x2": str(round(px - 8, 1)), "y2": str(round(py + 6, 1)),
+        })
+        ET.SubElement(group, "line", {
+            "x1": str(round(px + 8, 1)), "y1": str(round(py - 6, 1)),
+            "x2": str(round(px + 8, 1)), "y2": str(round(py + 6, 1)),
+        })
 
 
 def write_svg(element: ET.Element, path: Path) -> None:
