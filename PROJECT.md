@@ -68,8 +68,8 @@ spain-map-worksheet-generator/
 ├── .claude/
 │   └── settings.json           # SessionStart hook (confirms CLAUDE.md read)
 │
-├── references/
-│   └── README.txt              # Notes on edufichas.com reference PDF (save PDF here manually)
+├── references/                 # LOCAL ONLY — in .gitignore, never committed
+│   └── *.pdf                   # Reference PDFs (save manually, not distributed)
 ├── archive/                    # End-of-session notes (one .md file per session)
 ├── CLAUDE.md                   # Project description + session start protocol for Claude
 ├── requirements.txt            # Python deps for generate_svg.py
@@ -153,12 +153,13 @@ Each comunidad is an SVG `<path>` with:
 
 ### Done
 - [x] `data/spain.json` — complete, all 52 provinces + 19 comunidades, bilingual
-- [x] `maps/provinces.svg` — 52 provinces, Canary Islands inset (below mainland), Africa strip with Ceuta + Melilla
-- [x] `maps/communities.svg` — 19 comunidades, from es-atlas TopoJSON (no dissolve artifacts)
-- [x] `scripts/generate_svg.py` — downloads Morocco/Algeria from Natural Earth 50m at run time; re-run if bounds or data change. `--communities` flag rebuilds only communities.svg
-- [x] `index.html` — printable worksheet generator, all 5 sheet types, ES/VAL, print-ready
+- [x] `maps/provinces.svg` — 52 provinces, Canary Islands inset (bottom-left, y=702–790), Africa strip outline-only, Portugal outline, Ceuta+Melilla tick markers
+- [x] `maps/communities.svg` — 19 comunidades, from es-atlas TopoJSON (no dissolve artifacts); same Africa/Portugal/inset treatment
+- [x] `scripts/generate_svg.py` — downloads Morocco/Algeria/Portugal from Natural Earth 50m; Africa fill=none baked in; micro-sliver filter (1e-4 sq deg); enclave markers computed from geo coords. `--communities` flag rebuilds only communities.svg
+- [x] `index.html` — printable worksheet generator, all 5 sheet types, ES/VAL, print-ready; `addLabels()` accounts for SVG transform offset (fixes Canary Islands label position)
 - [x] `CLAUDE.md` — session start confirmation protocol
 - [x] Print layout — A4 landscape, sidebar header, map fills ~196×174mm
+- [x] `references/` — excluded from git (.gitignore); PDF stays local only
 
 ### Not done
 - [ ] Step 2: Interactive browser exercises (click regions, score tracking)
@@ -170,11 +171,15 @@ Each comunidad is an SVG `<path>` with:
 - `provinces.svg` — from `codeforamerica/click_that_hood` province GeoJSON; 52 provinces colored by community
 - `communities.svg` — from **es-atlas** (`https://cdn.jsdelivr.net/npm/es-atlas@0.6.0/es/autonomous_regions.json`);
   community fill paths use `stroke:none` + `#community-borders` overlay; code mapping in `ES_ATLAS_TO_SPAIN_CODE`
+- Both SVGs include: Africa outline (fill=none), Portugal outline (fill=none), Canary Islands inset (y=702–790),
+  Ceuta+Melilla tick markers computed from geographic coords
+- `min_lat=35.0` keeps Africa strip to a thin coastal sliver (~21% of SVG height)
+- Micro-sliver filter: polygons with area < 1e-4 sq deg are dropped (prevents getBBox() drift)
 - Rebuild only communities: `python scripts/generate_svg.py --communities`
 
 ---
 
-## Next Task: Step 2 — Interactive exercises
+## Next Task: Step 2 — Interactive exercises (Step 1 fully complete)
 
 Step 1 (printable worksheets) is fully complete. Step 2 is interactive browser exercises.
 
@@ -263,3 +268,4 @@ Required sections:
 | 2026-06-10 | Africa strip fixed: real Natural Earth Morocco/Algeria geodata; min_lat 35.8→35.3; Ceuta+Melilla now visible → [archive/2026-06-10-01.md](archive/2026-06-10-01.md) |
 | 2026-06-10 | Callout labels for Ceuta+Melilla; Africa strip extended to lat 33.0; branch province-borders created → [archive/2026-06-10-02.md](archive/2026-06-10-02.md) |
 | 2026-06-10 | communities.svg switched to es-atlas source (no dissolve artifacts); --communities flag added → [archive/2026-06-10-03.md](archive/2026-06-10-03.md) |
+| 2026-06-11 | Africa outline-only; Portugal outline; Canary inset repositioned; label bugs fixed (getBBox+transform, Ceuta slivers); references/ removed from git → [archive/2026-06-11-01.md](archive/2026-06-11-01.md) |
