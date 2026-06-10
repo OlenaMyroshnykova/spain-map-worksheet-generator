@@ -154,14 +154,23 @@ Each comunidad is an SVG `<path>` with:
 ### Done
 - [x] `data/spain.json` — complete, all 52 provinces + 19 comunidades, bilingual
 - [x] `maps/provinces.svg` — 52 provinces, Canary Islands inset (below mainland), Africa strip with Ceuta + Melilla
-- [x] `maps/communities.svg` — 19 comunidades, dissolved from province geometry
-- [x] `scripts/generate_svg.py` — downloads Morocco/Algeria from Natural Earth 50m at run time; re-run if bounds or data change
+- [x] `maps/communities.svg` — 19 comunidades, from es-atlas TopoJSON (no dissolve artifacts)
+- [x] `scripts/generate_svg.py` — downloads Morocco/Algeria from Natural Earth 50m at run time; re-run if bounds or data change. `--communities` flag rebuilds only communities.svg
 - [x] `index.html` — printable worksheet generator, all 5 sheet types, ES/VAL, print-ready
 - [x] `CLAUDE.md` — session start confirmation protocol
 - [x] Print layout — A4 landscape, sidebar header, map fills ~196×174mm
 
 ### Not done
 - [ ] Step 2: Interactive browser exercises (click regions, score tracking)
+
+---
+
+## SVG Generation Notes
+
+- `provinces.svg` — from `codeforamerica/click_that_hood` province GeoJSON; 52 provinces colored by community
+- `communities.svg` — from **es-atlas** (`https://cdn.jsdelivr.net/npm/es-atlas@0.6.0/es/autonomous_regions.json`);
+  community fill paths use `stroke:none` + `#community-borders` overlay; code mapping in `ES_ATLAS_TO_SPAIN_CODE`
+- Rebuild only communities: `python scripts/generate_svg.py --communities`
 
 ---
 
@@ -252,3 +261,5 @@ Required sections:
 | 2026-06-09 | Canary Islands inset moved below mainland (SVG canvas 900×800); verified with Playwright → [archive/2026-06-09-05.md](archive/2026-06-09-05.md) |
 | 2026-06-09 | CLAUDE.md + session hook; Canary Islands label fix (baked coords); Africa strip; print layout optimized → [archive/2026-06-09-06.md](archive/2026-06-09-06.md) |
 | 2026-06-10 | Africa strip fixed: real Natural Earth Morocco/Algeria geodata; min_lat 35.8→35.3; Ceuta+Melilla now visible → [archive/2026-06-10-01.md](archive/2026-06-10-01.md) |
+| 2026-06-10 | Callout labels for Ceuta+Melilla; Africa strip extended to lat 33.0; branch province-borders created → [archive/2026-06-10-02.md](archive/2026-06-10-02.md) |
+| 2026-06-10 | communities.svg switched to es-atlas source (no dissolve artifacts); --communities flag added → [archive/2026-06-10-03.md](archive/2026-06-10-03.md) |
