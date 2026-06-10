@@ -254,15 +254,6 @@ def add_africa_strip(parent: ET.Element, africa_gdf: "gpd.GeoDataFrame | None" =
         "fill": "#CCCCCC",
         "d": strip_d,
     })
-    text = ET.SubElement(group, "text", {
-        "x": "380",
-        "y": "791",
-        "font-family": "sans-serif",
-        "font-size": "9",
-        "fill": "#888",
-        "text-anchor": "middle",
-    })
-    text.text = "Marruecos / Argelia"
 
 
 def add_inset_frame(parent: ET.Element, label: str) -> ET.Element:
