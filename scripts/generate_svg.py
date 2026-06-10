@@ -68,24 +68,24 @@ ES_ATLAS_TO_SPAIN_CODE = {
 SVG_WIDTH = 900
 SVG_HEIGHT = 800
 
-# Canary Islands inset — positioned in the Atlantic Ocean space south-west of the mainland.
+# Canary Islands inset — bottom edge aligned with Africa strip bottom (y=790), left of Spain.
 INSET_X = 10
-INSET_Y = 615
+INSET_Y = 702   # Spain's southernmost mainland point is at y≈701
 INSET_WIDTH = 265
-INSET_HEIGHT = 115
+INSET_HEIGHT = 88  # 702 + 88 = 790 = Africa strip bottom edge
 
 MAINLAND_BOUNDS = {
     "min_lon": -9.5,
     "max_lon": 4.4,
-    "min_lat": 35.0,   # was 33.0 — raised to trim Africa strip to a thin coastal sliver
+    "min_lat": 35.0,
     "max_lat": 43.8,
 }
 
 CANARY_BOUNDS = {
-    "min_lon": -18.2,
-    "max_lon": -13.3,
-    "min_lat": 27.6,
-    "max_lat": 29.5,
+    "min_lon": -18.5,  # slight padding around islands
+    "max_lon": -13.0,
+    "min_lat": 27.3,
+    "max_lat": 29.8,
 }
 
 # Province codes that belong to the Canary Islands.
@@ -142,20 +142,23 @@ def download_communities_geojson() -> gpd.GeoDataFrame:
 
 
 def download_africa_context(url: str) -> "gpd.GeoDataFrame | None":
-    """Download Natural Earth countries and return the Morocco + Algeria subset."""
-    print(f"  Downloading Africa context: {url}")
+    """Download Natural Earth countries and return Morocco, Algeria and Portugal."""
+    print(f"  Downloading neighbor context: {url}")
     try:
         with urllib.request.urlopen(url) as response:
             raw = response.read()
         gdf = gpd.read_file(io.BytesIO(raw))
         for field in ("ADMIN", "admin", "NAME", "name"):
             if field in gdf.columns:
-                subset = gdf[gdf[field].isin({"Morocco", "Algeria"})]
+                subset = gdf[gdf[field].isin({"Morocco", "Algeria", "Portugal"})]
                 if not subset.empty:
-                    print(f"  Found {len(subset)} Africa context features (field='{field}').")
+                    gdf._name_field = field  # stash for use in add_africa_strip
+                    subset = subset.copy()
+                    subset["_name"] = subset[field]
+                    print(f"  Found {len(subset)} neighbor features (field='{field}').")
                     return subset
     except Exception as exc:
-        print(f"  Warning: Africa context download failed ({exc}). Using fallback path.")
+        print(f"  Warning: Neighbor context download failed ({exc}). Using fallback path.")
     return None
 
 
@@ -267,35 +270,44 @@ COMMUNITIES_STYLE = (
 
 
 def add_africa_strip(parent: ET.Element, africa_gdf: "gpd.GeoDataFrame | None" = None) -> None:
-    """Add North Africa geographic context (Morocco + Algeria) clipped to map bounds."""
+    """Add Morocco/Algeria outline and Portugal outline, clipped to map bounds."""
     group = ET.SubElement(parent, "g", {"id": "africa-context"})
 
-    if africa_gdf is not None and not africa_gdf.empty:
-        clip = shapely_box(
-            MAINLAND_BOUNDS["min_lon"],
-            MAINLAND_BOUNDS["min_lat"],
-            MAINLAND_BOUNDS["max_lon"],
-            MAINLAND_BOUNDS["max_lat"],
-        )
-        combined = africa_gdf.geometry.union_all()
-        clipped = combined.intersection(clip)
-        strip_d = geometry_to_path_data(clipped, MAINLAND_BOUNDS, SVG_WIDTH, SVG_HEIGHT)
-    else:
-        # Fallback: manually traced Morocco coastline for min_lat=35.3
-        strip_d = (
-            "M0,799 C80,797 160,790 220,762 "
-            "C247,749 260,741 272,738 "
-            "C280,737 292,742 315,752 "
-            "C345,764 390,778 435,788 "
-            "C470,793 510,797 560,799 "
-            "C620,800 700,800 900,800 L0,800 Z"
-        )
+    clip = shapely_box(
+        MAINLAND_BOUNDS["min_lon"],
+        MAINLAND_BOUNDS["min_lat"],
+        MAINLAND_BOUNDS["max_lon"],
+        MAINLAND_BOUNDS["max_lat"],
+    )
 
-    ET.SubElement(group, "path", {
-        "id": "africa-strip",
-        "fill": "none",
-        "d": strip_d,
-    })
+    if africa_gdf is not None and not africa_gdf.empty and "_name" in africa_gdf.columns:
+        # Morocco + Algeria → africa-strip
+        africa = africa_gdf[africa_gdf["_name"].isin({"Morocco", "Algeria"})]
+        if not africa.empty:
+            geom = africa.geometry.union_all().intersection(clip)
+            d = geometry_to_path_data(geom, MAINLAND_BOUNDS, SVG_WIDTH, SVG_HEIGHT)
+        else:
+            d = ""
+        ET.SubElement(group, "path", {"id": "africa-strip", "fill": "none", "d": d})
+
+        # Portugal → separate outline path
+        portugal = africa_gdf[africa_gdf["_name"] == "Portugal"]
+        if not portugal.empty:
+            geom = portugal.geometry.union_all().intersection(clip)
+            d = geometry_to_path_data(geom, MAINLAND_BOUNDS, SVG_WIDTH, SVG_HEIGHT)
+            if d:
+                ET.SubElement(group, "path", {"id": "portugal-outline", "fill": "none", "d": d})
+    else:
+        # Fallback: Morocco coast only
+        fallback_d = (
+            "M234,730 L247,718 L261,714 L270,709 L277,711 "
+            "L274,720 L279,730 L318,751 L337,755 L360,749 "
+            "L418,743 L424,740 L426,745 L430,754 L445,758 "
+            "L491,759 L506,752 L535,730 L553,718 L584,704 "
+            "L621,689 L644,674 L736,653 L775,651 L835,637 "
+            "L890,629 L890,790 L56,790 Z"
+        )
+        ET.SubElement(group, "path", {"id": "africa-strip", "fill": "none", "d": fallback_d})
 
 
 def add_inset_frame(parent: ET.Element, label: str) -> ET.Element:
