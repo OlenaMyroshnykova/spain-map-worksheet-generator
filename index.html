@@ -534,14 +534,62 @@ function addLabels(svgEl, list, opts = {}) {
   const attr = dataAttr();
   const minW = opts.minW || 14;
 
+  // SVG viewport width — used to pick left vs right side for callout labels
+  const vbW = parseFloat(svgEl.getAttribute('viewBox')?.split(' ')[2]) || 900;
+
   list.forEach((item, idx) => {
     const path = svgEl.querySelector(`[${attr}="${item.id}"]`);
     if (!path) return;
     let bb;
     try { bb = path.getBBox(); } catch (_) { return; }
-    if (bb.width < minW && bb.height < minW) return;
     const cx = bb.x + bb.width  / 2;
     const cy = bb.y + bb.height / 2;
+
+    const tooSmall = bb.width < minW && bb.height < minW;
+
+    if (tooSmall && !opts.numbered) {
+      // Callout label: dot at centroid + leader line + text outside
+      const dot = document.createElementNS(ns, 'circle');
+      dot.setAttribute('cx', cx); dot.setAttribute('cy', cy); dot.setAttribute('r', 3);
+      dot.setAttribute('fill', path.getAttribute('fill') || '#888');
+      dot.setAttribute('stroke', '#555'); dot.setAttribute('stroke-width', '0.7');
+      dot.setAttribute('pointer-events', 'none');
+      svgEl.appendChild(dot);
+
+      // Place label to the right if centroid is in the left half, else to the left
+      const goRight = cx < vbW * 0.55;
+      const lx = goRight ? cx + 55 : cx - 55;
+      const ly = cy - 20;
+
+      const line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+      line.setAttribute('x2', lx); line.setAttribute('y2', ly);
+      line.setAttribute('stroke', '#555'); line.setAttribute('stroke-width', '0.7');
+      line.setAttribute('pointer-events', 'none');
+      svgEl.appendChild(line);
+
+      const anchor = goRight ? 'start' : 'end';
+      const label  = n(item);
+      const bg = document.createElementNS(ns, 'text');
+      bg.setAttribute('x', lx); bg.setAttribute('y', ly);
+      bg.setAttribute('text-anchor', anchor); bg.setAttribute('dominant-baseline', 'middle');
+      bg.setAttribute('font-size', '7'); bg.setAttribute('font-weight', '600');
+      bg.setAttribute('font-family', 'Segoe UI,Arial,sans-serif');
+      bg.setAttribute('stroke', '#fff'); bg.setAttribute('stroke-width', '2.5');
+      bg.setAttribute('stroke-linejoin', 'round'); bg.setAttribute('paint-order', 'stroke');
+      bg.setAttribute('fill', 'none'); bg.setAttribute('pointer-events', 'none');
+      bg.textContent = label;
+      const fg = bg.cloneNode(false);
+      fg.removeAttribute('stroke'); fg.removeAttribute('stroke-width');
+      fg.removeAttribute('stroke-linejoin'); fg.removeAttribute('paint-order');
+      fg.setAttribute('fill', '#1a202c');
+      fg.textContent = label;
+      svgEl.appendChild(bg);
+      svgEl.appendChild(fg);
+      return;
+    }
+
+    if (tooSmall && opts.numbered) return; // numbered mode: skip truly invisible regions
 
     // Font size proportional to region area, clamped between 5.5 and 14
     const size = Math.max(5.5, Math.min(14, Math.sqrt(bb.width * bb.height) * 0.085));
