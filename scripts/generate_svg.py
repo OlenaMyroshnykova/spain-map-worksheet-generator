@@ -25,6 +25,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import geopandas as gpd
+from shapely import set_precision
 from shapely.geometry import GeometryCollection, MultiPolygon, Polygon, box as shapely_box
 from shapely.ops import unary_union
 
@@ -224,6 +225,19 @@ SHARED_STYLE = (
     ".inset-label { font-family: sans-serif; font-size: 9px; fill: #666; } "
 )
 
+# communities.svg uses no stroke on fill paths + a separate border overlay,
+# so no province-boundary artifacts can appear inside community regions.
+COMMUNITIES_STYLE = (
+    "path { stroke: none; } "
+    "path:hover { opacity: 0.8; cursor: pointer; } "
+    "#community-borders path { fill: none; stroke: #555; stroke-width: 0.7; "
+    "stroke-linejoin: round; pointer-events: none; } "
+    "#africa-context path { stroke: #888; stroke-width: 0.5; pointer-events: none; } "
+    "#africa-context path:hover { opacity: 1; cursor: default; } "
+    ".inset-border { fill: none; stroke: #999; stroke-width: 1; stroke-dasharray: 4 3; } "
+    ".inset-label { font-family: sans-serif; font-size: 9px; fill: #666; } "
+)
+
 
 def add_africa_strip(parent: ET.Element, africa_gdf: "gpd.GeoDataFrame | None" = None) -> None:
     """Add North Africa geographic context (Morocco + Algeria) clipped to map bounds."""
@@ -336,27 +350,41 @@ def build_provinces_svg(
 
 def dissolve_communities_clean(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """
-    Dissolve provinces into communities, removing micro-slivers that arise
-    from province boundary misalignments in the source GeoJSON.
+    Dissolve provinces into communities with no visible province-border artifacts.
 
-    Province edges between adjacent features rarely share exactly the same
-    coordinates, so a plain dissolve() leaves hundreds of tiny sliver polygons
-    (< 0.001 km²) along former province borders.  We filter them out by area
-    while keeping all legitimate small features (islands, enclaves).
+    Province edges in the source GeoJSON are often slightly misaligned, leaving
+    tiny gaps or slivers after a plain dissolve().  Fix:
+      1. Buffer each province by SNAP to close micro-gaps between neighbors.
+      2. unary_union the buffered group → clean merged shape.
+      3. Shrink back by SNAP to restore original outline.
+      4. Drop sub-polygons smaller than MIN_AREA (stray slivers).
+      5. Drop interior rings (holes) smaller than MIN_HOLE_AREA (gap artifacts).
     """
-    # 1e-5 degrees² ≈ 0.12 km² — removes sliver artifacts, keeps all real islands/enclaves
-    MIN_AREA = 1e-5
+    # Snap to 0.001° grid (~100 m) so adjacent province edges share exact coordinates,
+    # then union — eliminates gaps and slivers without distorting the visible outline.
+    GRID = 0.001
+    MIN_AREA = 1e-5      # ~0.12 km² — keeps real islands, drops leftover slivers
+    MIN_HOLE_AREA = 1e-4 # ~1.2 km² — keeps real enclaves, drops gap holes
 
     rows = []
     for code, group in gdf.groupby("cod_ccaa"):
-        merged = unary_union(list(group.geometry))
+        snapped = [set_precision(g, grid_size=GRID) for g in group.geometry]
+        merged = unary_union(snapped)
+
         if isinstance(merged, Polygon):
             polys = [merged]
         elif isinstance(merged, MultiPolygon):
             polys = list(merged.geoms)
         else:
             polys = [g for g in merged.geoms if isinstance(g, (Polygon, MultiPolygon))]
-        clean_polys = [p for p in polys if p.area > MIN_AREA]
+
+        clean_polys = []
+        for p in polys:
+            if p.area < MIN_AREA:
+                continue
+            kept_holes = [h for h in p.interiors if Polygon(h).area >= MIN_HOLE_AREA]
+            clean_polys.append(Polygon(p.exterior.coords, [list(h.coords) for h in kept_holes]))
+
         if not clean_polys:
             continue
         clean_geom = clean_polys[0] if len(clean_polys) == 1 else MultiPolygon(clean_polys)
@@ -377,7 +405,7 @@ def build_communities_svg(
     communities_gdf = dissolve_communities_clean(gdf)
 
     svg = make_svg_root()
-    ET.SubElement(svg, "style").text = SHARED_STYLE
+    ET.SubElement(svg, "style").text = COMMUNITIES_STYLE
     add_africa_strip(svg, africa_gdf)
 
     mainland = ET.SubElement(svg, "g", {"id": "mainland"})
@@ -388,7 +416,6 @@ def build_communities_svg(
         community_id = community_ids.get(community_code, community_code)
         fill = community_colors.get(community_code, "#CCCCCC")
 
-        # Canary Islands community has both island groups (codes 35, 38)
         is_canary = community_code == "04"
 
         bounds = CANARY_BOUNDS if is_canary else MAINLAND_BOUNDS
@@ -403,6 +430,22 @@ def build_communities_svg(
             "fill": fill,
         }
         add_path(inset if is_canary else mainland, path_data, attrs, is_inset=is_canary)
+
+    # Border overlay: draw community outlines on top with no fill.
+    # Since community fill paths have stroke:none, ONLY this overlay draws borders —
+    # province lines can never bleed through.
+    borders = ET.SubElement(svg, "g", {"id": "community-borders"})
+    for _, row in communities_gdf.iterrows():
+        community_code = str(row["cod_ccaa"]).zfill(2)
+        is_canary = community_code == "04"
+        bounds = CANARY_BOUNDS if is_canary else MAINLAND_BOUNDS
+        canvas_w = INSET_WIDTH if is_canary else SVG_WIDTH
+        canvas_h = INSET_HEIGHT if is_canary else SVG_HEIGHT
+        path_data = geometry_to_path_data(row.geometry, bounds, canvas_w, canvas_h)
+        attrs: dict = {"fill": "none", "d": path_data}
+        if is_canary:
+            attrs["transform"] = f"translate({INSET_X},{INSET_Y})"
+        ET.SubElement(borders, "path", attrs)
 
     return svg
 
@@ -426,7 +469,7 @@ def write_svg(element: ET.Element, path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def main() -> None:
+def main(communities_only: bool = False) -> None:
     print("=== Spain SVG Map Generator ===\n")
 
     if not DATA_FILE.exists():
@@ -445,9 +488,10 @@ def main() -> None:
     print("Downloading Africa context (Morocco + Algeria)...")
     africa_gdf = download_africa_context(AFRICA_GEOJSON_URL)
 
-    print("\nBuilding provinces.svg...")
-    provinces_svg = build_provinces_svg(gdf, community_colors, province_ids, africa_gdf)
-    write_svg(provinces_svg, OUTPUT_PROVINCES)
+    if not communities_only:
+        print("\nBuilding provinces.svg...")
+        provinces_svg = build_provinces_svg(gdf, community_colors, province_ids, africa_gdf)
+        write_svg(provinces_svg, OUTPUT_PROVINCES)
 
     print("\nBuilding communities.svg...")
     communities_svg = build_communities_svg(gdf, community_colors, community_ids, africa_gdf)
@@ -457,4 +501,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(communities_only="--communities" in sys.argv)
