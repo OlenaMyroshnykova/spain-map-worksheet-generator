@@ -68,6 +68,8 @@ spain-map-worksheet-generator/
 ├── .claude/
 │   └── settings.json           # SessionStart hook (confirms CLAUDE.md read)
 │
+├── references/
+│   └── README.txt              # Notes on edufichas.com reference PDF (save PDF here manually)
 ├── archive/                    # End-of-session notes (one .md file per session)
 ├── CLAUDE.md                   # Project description + session start protocol for Claude
 ├── requirements.txt            # Python deps for generate_svg.py
@@ -153,7 +155,7 @@ Each comunidad is an SVG `<path>` with:
 - [x] `data/spain.json` — complete, all 52 provinces + 19 comunidades, bilingual
 - [x] `maps/provinces.svg` — 52 provinces, Canary Islands inset (below mainland), Africa strip with Ceuta + Melilla
 - [x] `maps/communities.svg` — 19 comunidades, dissolved from province geometry
-- [x] `scripts/generate_svg.py` — working, no need to re-run unless data changes
+- [x] `scripts/generate_svg.py` — downloads Morocco/Algeria from Natural Earth 50m at run time; re-run if bounds or data change
 - [x] `index.html` — printable worksheet generator, all 5 sheet types, ES/VAL, print-ready
 - [x] `CLAUDE.md` — session start confirmation protocol
 - [x] Print layout — A4 landscape, sidebar header, map fills ~196×174mm
@@ -249,3 +251,4 @@ Required sections:
 | 2026-06-09 | Dynamic font size for map labels; Canary Islands inset fix attempted and reverted → [archive/2026-06-09-04.md](archive/2026-06-09-04.md) |
 | 2026-06-09 | Canary Islands inset moved below mainland (SVG canvas 900×800); verified with Playwright → [archive/2026-06-09-05.md](archive/2026-06-09-05.md) |
 | 2026-06-09 | CLAUDE.md + session hook; Canary Islands label fix (baked coords); Africa strip; print layout optimized → [archive/2026-06-09-06.md](archive/2026-06-09-06.md) |
+| 2026-06-10 | Africa strip fixed: real Natural Earth Morocco/Algeria geodata; min_lat 35.8→35.3; Ceuta+Melilla now visible → [archive/2026-06-10-01.md](archive/2026-06-10-01.md) |
