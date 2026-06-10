@@ -548,7 +548,7 @@ function addLabels(svgEl, list, opts = {}) {
     const tooSmall = bb.width < minW && bb.height < minW;
 
     if (tooSmall && !opts.numbered) {
-      // Callout label: dot at centroid + leader line + text outside
+      // Dot at centroid + label immediately adjacent (no leader line)
       const dot = document.createElementNS(ns, 'circle');
       dot.setAttribute('cx', cx); dot.setAttribute('cy', cy); dot.setAttribute('r', 3);
       dot.setAttribute('fill', path.getAttribute('fill') || '#888');
@@ -556,17 +556,9 @@ function addLabels(svgEl, list, opts = {}) {
       dot.setAttribute('pointer-events', 'none');
       svgEl.appendChild(dot);
 
-      // Place label to the right if centroid is in the left half, else to the left
       const goRight = cx < vbW * 0.55;
-      const lx = goRight ? cx + 55 : cx - 55;
-      const ly = cy - 20;
-
-      const line = document.createElementNS(ns, 'line');
-      line.setAttribute('x1', cx); line.setAttribute('y1', cy);
-      line.setAttribute('x2', lx); line.setAttribute('y2', ly);
-      line.setAttribute('stroke', '#555'); line.setAttribute('stroke-width', '0.7');
-      line.setAttribute('pointer-events', 'none');
-      svgEl.appendChild(line);
+      const lx = goRight ? cx + 13 : cx - 13;
+      const ly = cy;
 
       const anchor = goRight ? 'start' : 'end';
       const label  = n(item);
