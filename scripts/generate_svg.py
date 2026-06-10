@@ -57,7 +57,7 @@ INSET_HEIGHT = 88
 MAINLAND_BOUNDS = {
     "min_lon": -9.5,
     "max_lon": 4.4,
-    "min_lat": 35.8,
+    "min_lat": 35.3,
     "max_lat": 43.8,
 }
 
@@ -180,9 +180,43 @@ def make_svg_root() -> ET.Element:
 SHARED_STYLE = (
     "path { stroke: #555; stroke-width: 0.6; stroke-linejoin: round; } "
     "path:hover { opacity: 0.8; cursor: pointer; } "
+    "#africa-context path { stroke: none; pointer-events: none; } "
+    "#africa-context path:hover { opacity: 1; cursor: default; } "
     ".inset-border { fill: none; stroke: #999; stroke-width: 1; stroke-dasharray: 4 3; } "
     ".inset-label { font-family: sans-serif; font-size: 9px; fill: #666; } "
 )
+
+
+def add_africa_strip(parent: ET.Element) -> None:
+    """Add a thin North Africa context strip at the bottom of the mainland map.
+
+    Path approximates Morocco/Algeria coastline with MAINLAND_BOUNDS min_lat=35.3.
+    Peak at x≈272 (Strait of Gibraltar, lat≈35.87°N → y≈738) fades left and right.
+    """
+    strip_d = (
+        "M0,799 C80,797 160,790 220,762 "
+        "C247,749 260,741 272,738 "
+        "C280,737 292,742 315,752 "
+        "C345,764 390,778 435,788 "
+        "C470,793 510,797 560,799 "
+        "C620,800 700,800 900,800 L0,800 Z"
+    )
+    group = ET.SubElement(parent, "g", {"id": "africa-context"})
+    ET.SubElement(group, "path", {
+        "id": "africa-strip",
+        "fill": "#CCCCCC",
+        "stroke": "none",
+        "d": strip_d,
+    })
+    text = ET.SubElement(group, "text", {
+        "x": "380",
+        "y": "791",
+        "font-family": "sans-serif",
+        "font-size": "9",
+        "fill": "#888",
+        "text-anchor": "middle",
+    })
+    text.text = "Marruecos / Argelia"
 
 
 def add_inset_frame(parent: ET.Element, label: str) -> ET.Element:
@@ -233,6 +267,7 @@ def build_provinces_svg(
     """Build SVG with one <path> per province."""
     svg = make_svg_root()
     ET.SubElement(svg, "style").text = SHARED_STYLE
+    add_africa_strip(svg)
 
     mainland = ET.SubElement(svg, "g", {"id": "mainland"})
     inset = add_inset_frame(svg, "Islas Canarias")
@@ -273,6 +308,7 @@ def build_communities_svg(
 
     svg = make_svg_root()
     ET.SubElement(svg, "style").text = SHARED_STYLE
+    add_africa_strip(svg)
 
     mainland = ET.SubElement(svg, "g", {"id": "mainland"})
     inset = add_inset_frame(svg, "Islas Canarias")
