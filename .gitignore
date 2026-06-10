@@ -4,3 +4,4 @@ package-lock.json
 *.png
 *.jpg
 .claude/
+references/
