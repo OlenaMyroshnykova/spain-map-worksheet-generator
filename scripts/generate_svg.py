@@ -25,7 +25,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import geopandas as gpd
-from shapely.geometry import MultiPolygon, Polygon
+from shapely.geometry import GeometryCollection, MultiPolygon, Polygon, box as shapely_box
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -39,6 +39,12 @@ OUTPUT_COMMUNITIES = REPO_ROOT / "maps" / "communities.svg"
 GEOJSON_URL = (
     "https://raw.githubusercontent.com/"
     "codeforamerica/click_that_hood/master/public/data/spain-provinces.geojson"
+)
+
+# Natural Earth 50m country boundaries — used to draw Morocco + Algeria context.
+AFRICA_GEOJSON_URL = (
+    "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/"
+    "master/geojson/ne_50m_admin_0_countries.geojson"
 )
 
 # ---------------------------------------------------------------------------
@@ -108,6 +114,24 @@ def download_geojson(url: str) -> gpd.GeoDataFrame:
     return gpd.read_file(io.BytesIO(raw))
 
 
+def download_africa_context(url: str) -> "gpd.GeoDataFrame | None":
+    """Download Natural Earth countries and return the Morocco + Algeria subset."""
+    print(f"  Downloading Africa context: {url}")
+    try:
+        with urllib.request.urlopen(url) as response:
+            raw = response.read()
+        gdf = gpd.read_file(io.BytesIO(raw))
+        for field in ("ADMIN", "admin", "NAME", "name"):
+            if field in gdf.columns:
+                subset = gdf[gdf[field].isin({"Morocco", "Algeria"})]
+                if not subset.empty:
+                    print(f"  Found {len(subset)} Africa context features (field='{field}').")
+                    return subset
+    except Exception as exc:
+        print(f"  Warning: Africa context download failed ({exc}). Using fallback path.")
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Coordinate projection
 # ---------------------------------------------------------------------------
@@ -157,9 +181,22 @@ def geometry_to_path_data(
     canvas_w: float,
     canvas_h: float,
 ) -> str:
-    """Convert a Shapely geometry (Polygon or MultiPolygon) to SVG path data."""
-    polygons = list(geometry.geoms) if isinstance(geometry, MultiPolygon) else [geometry]
-    return " ".join(polygon_to_path_data(p, bounds, canvas_w, canvas_h) for p in polygons)
+    """Convert a Shapely geometry to SVG path data (handles Polygon, MultiPolygon, GeometryCollection)."""
+    if isinstance(geometry, Polygon):
+        polys = [geometry]
+    elif isinstance(geometry, MultiPolygon):
+        polys = list(geometry.geoms)
+    elif isinstance(geometry, GeometryCollection):
+        # Flatten: keep only (Multi)Polygon parts (e.g. after an intersection)
+        polys = []
+        for g in geometry.geoms:
+            if isinstance(g, Polygon):
+                polys.append(g)
+            elif isinstance(g, MultiPolygon):
+                polys.extend(g.geoms)
+    else:
+        return ""
+    return " ".join(polygon_to_path_data(p, bounds, canvas_w, canvas_h) for p in polys)
 
 
 # ---------------------------------------------------------------------------
@@ -180,32 +217,41 @@ def make_svg_root() -> ET.Element:
 SHARED_STYLE = (
     "path { stroke: #555; stroke-width: 0.6; stroke-linejoin: round; } "
     "path:hover { opacity: 0.8; cursor: pointer; } "
-    "#africa-context path { stroke: none; pointer-events: none; } "
+    "#africa-context path { stroke: #888; stroke-width: 0.5; pointer-events: none; } "
     "#africa-context path:hover { opacity: 1; cursor: default; } "
     ".inset-border { fill: none; stroke: #999; stroke-width: 1; stroke-dasharray: 4 3; } "
     ".inset-label { font-family: sans-serif; font-size: 9px; fill: #666; } "
 )
 
 
-def add_africa_strip(parent: ET.Element) -> None:
-    """Add a thin North Africa context strip at the bottom of the mainland map.
-
-    Path approximates Morocco/Algeria coastline with MAINLAND_BOUNDS min_lat=35.3.
-    Peak at x≈272 (Strait of Gibraltar, lat≈35.87°N → y≈738) fades left and right.
-    """
-    strip_d = (
-        "M0,799 C80,797 160,790 220,762 "
-        "C247,749 260,741 272,738 "
-        "C280,737 292,742 315,752 "
-        "C345,764 390,778 435,788 "
-        "C470,793 510,797 560,799 "
-        "C620,800 700,800 900,800 L0,800 Z"
-    )
+def add_africa_strip(parent: ET.Element, africa_gdf: "gpd.GeoDataFrame | None" = None) -> None:
+    """Add North Africa geographic context (Morocco + Algeria) clipped to map bounds."""
     group = ET.SubElement(parent, "g", {"id": "africa-context"})
+
+    if africa_gdf is not None and not africa_gdf.empty:
+        clip = shapely_box(
+            MAINLAND_BOUNDS["min_lon"],
+            MAINLAND_BOUNDS["min_lat"],
+            MAINLAND_BOUNDS["max_lon"],
+            MAINLAND_BOUNDS["max_lat"],
+        )
+        combined = africa_gdf.geometry.union_all()
+        clipped = combined.intersection(clip)
+        strip_d = geometry_to_path_data(clipped, MAINLAND_BOUNDS, SVG_WIDTH, SVG_HEIGHT)
+    else:
+        # Fallback: manually traced Morocco coastline for min_lat=35.3
+        strip_d = (
+            "M0,799 C80,797 160,790 220,762 "
+            "C247,749 260,741 272,738 "
+            "C280,737 292,742 315,752 "
+            "C345,764 390,778 435,788 "
+            "C470,793 510,797 560,799 "
+            "C620,800 700,800 900,800 L0,800 Z"
+        )
+
     ET.SubElement(group, "path", {
         "id": "africa-strip",
         "fill": "#CCCCCC",
-        "stroke": "none",
         "d": strip_d,
     })
     text = ET.SubElement(group, "text", {
@@ -263,11 +309,12 @@ def build_provinces_svg(
     gdf: gpd.GeoDataFrame,
     community_colors: dict,
     province_ids: dict,
+    africa_gdf: "gpd.GeoDataFrame | None" = None,
 ) -> ET.Element:
     """Build SVG with one <path> per province."""
     svg = make_svg_root()
     ET.SubElement(svg, "style").text = SHARED_STYLE
-    add_africa_strip(svg)
+    add_africa_strip(svg, africa_gdf)
 
     mainland = ET.SubElement(svg, "g", {"id": "mainland"})
     inset = add_inset_frame(svg, "Islas Canarias")
@@ -299,6 +346,7 @@ def build_communities_svg(
     gdf: gpd.GeoDataFrame,
     community_colors: dict,
     community_ids: dict,
+    africa_gdf: "gpd.GeoDataFrame | None" = None,
 ) -> ET.Element:
     """
     Build SVG with one <path> per autonomous community.
@@ -308,7 +356,7 @@ def build_communities_svg(
 
     svg = make_svg_root()
     ET.SubElement(svg, "style").text = SHARED_STYLE
-    add_africa_strip(svg)
+    add_africa_strip(svg, africa_gdf)
 
     mainland = ET.SubElement(svg, "g", {"id": "mainland"})
     inset = add_inset_frame(svg, "Islas Canarias")
@@ -372,12 +420,15 @@ def main() -> None:
     gdf = download_geojson(GEOJSON_URL)
     print(f"  Loaded {len(gdf)} provinces.\n")
 
-    print("Building provinces.svg...")
-    provinces_svg = build_provinces_svg(gdf, community_colors, province_ids)
+    print("Downloading Africa context (Morocco + Algeria)...")
+    africa_gdf = download_africa_context(AFRICA_GEOJSON_URL)
+
+    print("\nBuilding provinces.svg...")
+    provinces_svg = build_provinces_svg(gdf, community_colors, province_ids, africa_gdf)
     write_svg(provinces_svg, OUTPUT_PROVINCES)
 
     print("\nBuilding communities.svg...")
-    communities_svg = build_communities_svg(gdf, community_colors, community_ids)
+    communities_svg = build_communities_svg(gdf, community_colors, community_ids, africa_gdf)
     write_svg(communities_svg, OUTPUT_COMMUNITIES)
 
     print("\nDone.")
