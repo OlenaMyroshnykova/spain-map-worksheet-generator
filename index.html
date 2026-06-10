@@ -542,8 +542,17 @@ function addLabels(svgEl, list, opts = {}) {
     if (!path) return;
     let bb;
     try { bb = path.getBBox(); } catch (_) { return; }
-    const cx = bb.x + bb.width  / 2;
-    const cy = bb.y + bb.height / 2;
+
+    // getBBox() returns local coordinates before any transform; account for translate offset
+    let tx = 0, ty = 0;
+    const xf = path.getAttribute('transform');
+    if (xf) {
+      const m = xf.match(/translate\(([\d.-]+),\s*([\d.-]+)\)/);
+      if (m) { tx = parseFloat(m[1]); ty = parseFloat(m[2]); }
+    }
+
+    const cx = bb.x + bb.width  / 2 + tx;
+    const cy = bb.y + bb.height / 2 + ty;
 
     const tooSmall = bb.width < minW && bb.height < minW;
 
