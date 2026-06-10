@@ -63,7 +63,7 @@ INSET_HEIGHT = 88
 MAINLAND_BOUNDS = {
     "min_lon": -9.5,
     "max_lon": 4.4,
-    "min_lat": 34.5,
+    "min_lat": 33.0,
     "max_lat": 43.8,
 }
 
