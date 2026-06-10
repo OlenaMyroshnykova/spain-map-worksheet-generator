@@ -26,6 +26,7 @@ from pathlib import Path
 
 import geopandas as gpd
 from shapely.geometry import GeometryCollection, MultiPolygon, Polygon, box as shapely_box
+from shapely.ops import unary_union
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -333,6 +334,36 @@ def build_provinces_svg(
     return svg
 
 
+def dissolve_communities_clean(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """
+    Dissolve provinces into communities, removing micro-slivers that arise
+    from province boundary misalignments in the source GeoJSON.
+
+    Province edges between adjacent features rarely share exactly the same
+    coordinates, so a plain dissolve() leaves hundreds of tiny sliver polygons
+    (< 0.001 km²) along former province borders.  We filter them out by area
+    while keeping all legitimate small features (islands, enclaves).
+    """
+    # 1e-5 degrees² ≈ 0.12 km² — removes sliver artifacts, keeps all real islands/enclaves
+    MIN_AREA = 1e-5
+
+    rows = []
+    for code, group in gdf.groupby("cod_ccaa"):
+        merged = unary_union(list(group.geometry))
+        if isinstance(merged, Polygon):
+            polys = [merged]
+        elif isinstance(merged, MultiPolygon):
+            polys = list(merged.geoms)
+        else:
+            polys = [g for g in merged.geoms if isinstance(g, (Polygon, MultiPolygon))]
+        clean_polys = [p for p in polys if p.area > MIN_AREA]
+        if not clean_polys:
+            continue
+        clean_geom = clean_polys[0] if len(clean_polys) == 1 else MultiPolygon(clean_polys)
+        rows.append({"cod_ccaa": code, "geometry": clean_geom})
+    return gpd.GeoDataFrame(rows, crs=gdf.crs)
+
+
 def build_communities_svg(
     gdf: gpd.GeoDataFrame,
     community_colors: dict,
@@ -343,7 +374,7 @@ def build_communities_svg(
     Build SVG with one <path> per autonomous community.
     Provinces are dissolved into their community geometry before rendering.
     """
-    communities_gdf = gdf.dissolve(by="cod_ccaa").reset_index()
+    communities_gdf = dissolve_communities_clean(gdf)
 
     svg = make_svg_root()
     ET.SubElement(svg, "style").text = SHARED_STYLE
