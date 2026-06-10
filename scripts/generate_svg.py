@@ -214,13 +214,27 @@ def make_svg_root() -> ET.Element:
     })
 
 
-SHARED_STYLE = (
-    "path { stroke: #555; stroke-width: 0.6; stroke-linejoin: round; } "
-    "path:hover { opacity: 0.8; cursor: pointer; } "
+_STYLE_COMMON = (
     "#africa-context path { stroke: #888; stroke-width: 0.5; pointer-events: none; } "
     "#africa-context path:hover { opacity: 1; cursor: default; } "
     ".inset-border { fill: none; stroke: #999; stroke-width: 1; stroke-dasharray: 4 3; } "
     ".inset-label { font-family: sans-serif; font-size: 9px; fill: #666; } "
+)
+
+# provinces.svg: thin province borders + thick community border overlay
+PROVINCES_STYLE = (
+    ".province-path { stroke: #bbb; stroke-width: 0.3; stroke-linejoin: round; } "
+    ".province-path:hover { opacity: 0.8; cursor: pointer; } "
+    "#community-borders path { fill: none; stroke: #444; stroke-width: 1.5; "
+    "stroke-linejoin: round; pointer-events: none; } "
+    + _STYLE_COMMON
+)
+
+# communities.svg: standard community borders
+COMMUNITIES_STYLE = (
+    ".community-path { stroke: #555; stroke-width: 0.8; stroke-linejoin: round; } "
+    ".community-path:hover { opacity: 0.8; cursor: pointer; } "
+    + _STYLE_COMMON
 )
 
 
@@ -279,6 +293,23 @@ def is_canary_province(code: str) -> bool:
     return code in CANARY_PROVINCE_CODES
 
 
+def add_community_borders_overlay(parent: ET.Element, gdf: gpd.GeoDataFrame) -> None:
+    """Draw thick community boundary lines on top of all province paths."""
+    communities_gdf = gdf.dissolve(by="cod_ccaa").reset_index()
+    group = ET.SubElement(parent, "g", {"id": "community-borders"})
+    for _, row in communities_gdf.iterrows():
+        community_code = str(row["cod_ccaa"]).zfill(2)
+        is_canary = community_code == "04"
+        bounds = CANARY_BOUNDS if is_canary else MAINLAND_BOUNDS
+        canvas_w = INSET_WIDTH if is_canary else SVG_WIDTH
+        canvas_h = INSET_HEIGHT if is_canary else SVG_HEIGHT
+        path_data = geometry_to_path_data(row.geometry, bounds, canvas_w, canvas_h)
+        attrs: dict = {"fill": "none", "d": path_data}
+        if is_canary:
+            attrs["transform"] = f"translate({INSET_X},{INSET_Y})"
+        ET.SubElement(group, "path", attrs)
+
+
 def add_path(
     parent: ET.Element,
     path_data: str,
@@ -304,7 +335,7 @@ def build_provinces_svg(
 ) -> ET.Element:
     """Build SVG with one <path> per province."""
     svg = make_svg_root()
-    ET.SubElement(svg, "style").text = SHARED_STYLE
+    ET.SubElement(svg, "style").text = PROVINCES_STYLE
     add_africa_strip(svg, africa_gdf)
 
     mainland = ET.SubElement(svg, "g", {"id": "mainland"})
@@ -327,9 +358,11 @@ def build_provinces_svg(
             "data-province-id": province_id,
             "data-community-code": community_code,
             "fill": fill,
+            "class": "province-path",
         }
         add_path(inset if canary else mainland, path_data, attrs, is_inset=canary)
 
+    add_community_borders_overlay(svg, gdf)
     return svg
 
 
@@ -346,7 +379,7 @@ def build_communities_svg(
     communities_gdf = gdf.dissolve(by="cod_ccaa").reset_index()
 
     svg = make_svg_root()
-    ET.SubElement(svg, "style").text = SHARED_STYLE
+    ET.SubElement(svg, "style").text = COMMUNITIES_STYLE
     add_africa_strip(svg, africa_gdf)
 
     mainland = ET.SubElement(svg, "g", {"id": "mainland"})
@@ -370,6 +403,7 @@ def build_communities_svg(
             "data-community-id": community_id,
             "data-community-code": community_code,
             "fill": fill,
+            "class": "community-path",
         }
         add_path(inset if is_canary else mainland, path_data, attrs, is_inset=is_canary)
 
