@@ -574,7 +574,7 @@ function addLabels(svgEl, list, opts = {}) {
       const bg = document.createElementNS(ns, 'text');
       bg.setAttribute('x', lx); bg.setAttribute('y', ly);
       bg.setAttribute('text-anchor', anchor); bg.setAttribute('dominant-baseline', 'middle');
-      bg.setAttribute('font-size', '7'); bg.setAttribute('font-weight', '600');
+      bg.setAttribute('font-size', '9'); bg.setAttribute('font-weight', '600');
       bg.setAttribute('font-family', 'Segoe UI,Arial,sans-serif');
       bg.setAttribute('stroke', '#fff'); bg.setAttribute('stroke-width', '2.5');
       bg.setAttribute('stroke-linejoin', 'round'); bg.setAttribute('paint-order', 'stroke');
@@ -592,8 +592,8 @@ function addLabels(svgEl, list, opts = {}) {
 
     if (tooSmall && opts.numbered) return; // numbered mode: skip truly invisible regions
 
-    // Font size proportional to region area, clamped between 5.5 and 14
-    const size = Math.max(5.5, Math.min(14, Math.sqrt(bb.width * bb.height) * 0.085));
+    // Font size proportional to region area, clamped between 6 and 15
+    let size = Math.max(6, Math.min(15, Math.sqrt(bb.width * bb.height) * 0.10));
 
     if (opts.numbered) {
       const g = document.createElementNS(ns, 'g');
@@ -616,6 +616,10 @@ function addLabels(svgEl, list, opts = {}) {
       const lines = (words.length > 2 && size >= 7)
         ? [words.slice(0, Math.ceil(words.length/2)).join(' '), words.slice(Math.ceil(words.length/2)).join(' ')]
         : [label];
+      // Fit check: keep text within bbox width (approx 0.60 em per char)
+      const longestLine = lines.reduce((a, b) => a.length > b.length ? a : b, '');
+      const maxFitSize = (bb.width * 0.82) / (longestLine.length * 0.60);
+      if (maxFitSize < size) size = Math.max(6, maxFitSize);
       const lineH = size * 1.2;
       const startY = cy - (lines.length - 1) * lineH / 2;
 
