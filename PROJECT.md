@@ -179,9 +179,20 @@ Each comunidad is an SVG `<path>` with:
 
 ---
 
-## Next Task: Step 2 — Interactive exercises (Step 1 fully complete)
+## Next Task: Доработка подписей провинций (ветка `feature/province-labels`)
 
 Step 1 (printable worksheets) is fully complete. Step 2 is interactive browser exercises.
+
+### Что осталось на ветке `feature/province-labels`
+
+1. **Сеута и Мелилья**: callout шрифт `9px → 14px`
+2. **Ручные нажимки** для 4 провинций через `LABEL_OFFSETS { dx, dy }` в `addLabels()`:
+   - **Girona** — метка в нижнем-левом углу, нужно сдвинуть правее и выше
+   - **Tarragona** — метка у побережья (вверх-право), нужно сдвинуть влево и вниз
+   - **Alicante** — метка в верхней части узкой провинции, нужно опустить
+   - **Zaragoza** — метка левее центра, нужно сдвинуть правее
+   - Пользователь будет давать инструкции по каждой провинции отдельно
+3. Смержить ветку в main
 
 ### Ideas for Step 2
 
@@ -270,3 +281,4 @@ Required sections:
 | 2026-06-10 | communities.svg switched to es-atlas source (no dissolve artifacts); --communities flag added → [archive/2026-06-10-03.md](archive/2026-06-10-03.md) |
 | 2026-06-11 | Africa outline-only; Portugal outline; Canary inset repositioned; label bugs fixed (getBBox+transform, Ceuta slivers); references/ removed from git → [archive/2026-06-11-01.md](archive/2026-06-11-01.md) |
 | 2026-06-11 | Canary inset narrowed (width 265→245) to uncover Ceuta; white fill rect removed from both SVGs → [archive/2026-06-11-02.md](archive/2026-06-11-02.md) |
+| 2026-06-11 | Province label font sizes increased (×0.10, cap 15, floor 6, overflow check); Ceuta/Melilla callout 9px; nudge attempt rolled back → [archive/2026-06-11-03.md](archive/2026-06-11-03.md) |
