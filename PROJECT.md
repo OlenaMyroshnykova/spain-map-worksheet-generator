@@ -153,8 +153,8 @@ Each comunidad is an SVG `<path>` with:
 
 ### Done
 - [x] `data/spain.json` — complete, all 52 provinces + 19 comunidades, bilingual
-- [x] `maps/provinces.svg` — 52 provinces, Canary Islands inset (bottom-left, y=702–790), Africa strip outline-only, Portugal outline, Ceuta+Melilla tick markers
-- [x] `maps/communities.svg` — 19 comunidades, from es-atlas TopoJSON (no dissolve artifacts); same Africa/Portugal/inset treatment
+- [x] `maps/provinces.svg` — 52 provinces, Canary Islands inset (bottom-left, y=702–790, width=245, no white fill), Africa strip outline-only, Portugal outline, Ceuta+Melilla tick markers
+- [x] `maps/communities.svg` — 19 comunidades, from es-atlas TopoJSON (no dissolve artifacts); same Africa/Portugal/inset treatment; inset width=245, no white fill
 - [x] `scripts/generate_svg.py` — downloads Morocco/Algeria/Portugal from Natural Earth 50m; Africa fill=none baked in; micro-sliver filter (1e-4 sq deg); enclave markers computed from geo coords. `--communities` flag rebuilds only communities.svg
 - [x] `index.html` — printable worksheet generator, all 5 sheet types, ES/VAL, print-ready; `addLabels()` accounts for SVG transform offset (fixes Canary Islands label position)
 - [x] `CLAUDE.md` — session start confirmation protocol
@@ -269,3 +269,4 @@ Required sections:
 | 2026-06-10 | Callout labels for Ceuta+Melilla; Africa strip extended to lat 33.0; branch province-borders created → [archive/2026-06-10-02.md](archive/2026-06-10-02.md) |
 | 2026-06-10 | communities.svg switched to es-atlas source (no dissolve artifacts); --communities flag added → [archive/2026-06-10-03.md](archive/2026-06-10-03.md) |
 | 2026-06-11 | Africa outline-only; Portugal outline; Canary inset repositioned; label bugs fixed (getBBox+transform, Ceuta slivers); references/ removed from git → [archive/2026-06-11-01.md](archive/2026-06-11-01.md) |
+| 2026-06-11 | Canary inset narrowed (width 265→245) to uncover Ceuta; white fill rect removed from both SVGs → [archive/2026-06-11-02.md](archive/2026-06-11-02.md) |
