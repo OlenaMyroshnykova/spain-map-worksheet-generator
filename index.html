@@ -551,8 +551,15 @@ function addLabels(svgEl, list, opts = {}) {
       if (m) { tx = parseFloat(m[1]); ty = parseFloat(m[2]); }
     }
 
-    const cx = bb.x + bb.width  / 2 + tx;
+    let cx = bb.x + bb.width  / 2 + tx;
     const cy = bb.y + bb.height / 2 + ty;
+
+    // Per-province label position / size overrides
+    const labelOverrides = {
+      cadiz: { dx: -20, fontSize: 14 },
+    };
+    const ovr = labelOverrides[item.id] || {};
+    if (ovr.dx) cx += ovr.dx;
 
     const tooSmall = bb.width < minW && bb.height < minW;
 
@@ -593,7 +600,7 @@ function addLabels(svgEl, list, opts = {}) {
     if (tooSmall && opts.numbered) return; // numbered mode: skip truly invisible regions
 
     // Font size proportional to region area, clamped between 6 and 15
-    let size = Math.max(6, Math.min(15, Math.sqrt(bb.width * bb.height) * 0.10));
+    let size = ovr.fontSize || Math.max(6, Math.min(15, Math.sqrt(bb.width * bb.height) * 0.10));
 
     if (opts.numbered) {
       const g = document.createElementNS(ns, 'g');
