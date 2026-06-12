@@ -282,3 +282,4 @@ Required sections:
 | 2026-06-11 | Africa outline-only; Portugal outline; Canary inset repositioned; label bugs fixed (getBBox+transform, Ceuta slivers); references/ removed from git → [archive/2026-06-11-01.md](archive/2026-06-11-01.md) |
 | 2026-06-11 | Canary inset narrowed (width 265→245) to uncover Ceuta; white fill rect removed from both SVGs → [archive/2026-06-11-02.md](archive/2026-06-11-02.md) |
 | 2026-06-11 | Province label font sizes increased (×0.10, cap 15, floor 6, overflow check); Ceuta/Melilla callout 9px; nudge attempt rolled back → [archive/2026-06-11-03.md](archive/2026-06-11-03.md) |
+| 2026-06-12 | Ceuta/Melilla callout 9→14px; labelOverrides mechanism added; Cádiz dx=-13, fontSize=14 → [archive/2026-06-12-01.md](archive/2026-06-12-01.md) |
