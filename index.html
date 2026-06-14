@@ -533,22 +533,25 @@ function parseSVG(str) {
 // existing labels are already positioned correctly.
 const ISLAND_PROVINCE_IDS = new Set(['07', '35', '38']);
 
-// Final visual adjustments for a few mainland provinces.
-// dx/dy use SVG units; size sets a minimum readable font size.
+// Final visual adjustments for province labels.
+// Province codes are INE codes, so these corrections work in both languages.
 const PROVINCE_LABEL_OVERRIDES = {
-  // Only final positional nudges. Font size is always chosen and validated
-  // by the contour algorithm itself.
   '03': { dx:  0.6, dy:  0.8 }, // Alicante
   '12': { dx: -0.4, dy: -0.8 }, // Castelló / Castellón
   '28': { dx:  0.0, dy:  0.6 }, // Madrid
   '08': { dx: -0.5, dy: -0.2 }, // Barcelona
   '43': { dx:  0.2, dy: -0.7 }, // Tarragona
 
-  // País Vasco: preserve the font sizes selected by the algorithm and only
-  // separate the three neighbouring labels.
-  '48': { dx: -4.2, dy: -1.6 }, // Bizkaia / Vizcaya
+  // País Vasco
+  '48': { dx: -4.2, dy: -8.0 }, // Bizkaia / Vizcaya — higher
   '20': { dx:  4.8, dy: -0.8 }, // Gipuzkoa / Guipúzcoa
   '01': { dx:  0.0, dy:  3.2 }, // Araba / Álava
+
+  // Canary Islands and autonomous cities
+  '35': { fontSize: 14 }, // Las Palmas
+  '38': { fontSize: 14 }, // Santa Cruz de Tenerife
+  '51': { fontSize: 14 }, // Ceuta
+  '52': { fontSize: 14 }, // Melilla
 };
 
 function pathTranslation(path) {
@@ -865,10 +868,18 @@ function addLabels(svgEl, list, opts = {}) {
     const { tx, ty } = pathTranslation(path);
     let cx = bb.x + bb.width / 2 + tx;
     let cy = bb.y + bb.height / 2 + ty;
+    const provinceId = String(item.code).padStart(2, '0');
+    const labelOverride = S.topic === 'provinces'
+      ? (PROVINCE_LABEL_OVERRIDES[provinceId] || {})
+      : {};
+
     const tooSmall = bb.width < minW && bb.height < minW;
 
     // Keep the old external labels unchanged, including island callouts.
     if (tooSmall && !opts.numbered) {
+      cx += labelOverride.dx || 0;
+      cy += labelOverride.dy || 0;
+
       const dot = document.createElementNS(ns, 'circle');
       dot.setAttribute('cx', cx); dot.setAttribute('cy', cy); dot.setAttribute('r', 3);
       dot.setAttribute('fill', path.getAttribute('fill') || '#888');
@@ -885,7 +896,8 @@ function addLabels(svgEl, list, opts = {}) {
       const bg = document.createElementNS(ns, 'text');
       bg.setAttribute('x', lx); bg.setAttribute('y', ly);
       bg.setAttribute('text-anchor', anchor); bg.setAttribute('dominant-baseline', 'middle');
-      bg.setAttribute('font-size', '7'); bg.setAttribute('font-weight', '600');
+      bg.setAttribute('font-size', String(labelOverride.fontSize || 7));
+      bg.setAttribute('font-weight', '600');
       bg.setAttribute('font-family', 'Segoe UI,Arial,sans-serif');
       bg.setAttribute('stroke', '#fff'); bg.setAttribute('stroke-width', '2.5');
       bg.setAttribute('stroke-linejoin', 'round'); bg.setAttribute('paint-order', 'stroke');
@@ -904,9 +916,13 @@ function addLabels(svgEl, list, opts = {}) {
 
     if (tooSmall && opts.numbered) return;
 
-    const automaticSize = Math.max(5.5, Math.min(14, Math.sqrt(bb.width * bb.height) * 0.085));
+    const automaticSize = labelOverride.fontSize
+      || Math.max(5.5, Math.min(14, Math.sqrt(bb.width * bb.height) * 0.085));
 
     if (opts.numbered) {
+      cx += labelOverride.dx || 0;
+      cy += labelOverride.dy || 0;
+
       // Numbered worksheets intentionally retain the original positioning.
       const g = document.createElementNS(ns, 'g');
       const c = document.createElementNS(ns, 'circle');
@@ -931,7 +947,7 @@ function addLabels(svgEl, list, opts = {}) {
 
     const useContourAlgorithm =
       S.topic === 'provinces' &&
-      !ISLAND_PROVINCE_IDS.has(String(item.id).padStart(2, '0'));
+      !ISLAND_PROVINCE_IDS.has(String(item.code).padStart(2, '0'));
 
     if (useContourAlgorithm) {
       const layout = findContourLabelLayout(svgEl, path, label, automaticSize);
@@ -942,13 +958,11 @@ function addLabels(svgEl, list, opts = {}) {
         lines = layout.lines;
       }
 
-      const provinceId = String(item.id).padStart(2, '0');
-      const override = PROVINCE_LABEL_OVERRIDES[provinceId];
-      if (override) {
-        cx += override.dx || 0;
-        cy += override.dy || 0;
-      }
     }
+
+    // Apply manual position correction after automatic contour placement.
+    cx += labelOverride.dx || 0;
+    cy += labelOverride.dy || 0;
 
     // Safe fallback: original bbox-centre algorithm.
     if (!lines) {
