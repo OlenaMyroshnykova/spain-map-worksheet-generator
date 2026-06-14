@@ -68,4 +68,214 @@
     <line x1="416.7" y1="758.3" x2="416.7" y2="770.3" />
     <line x1="432.7" y1="758.3" x2="432.7" y2="770.3" />
   </g>
+  <g id="precomputed-labels" style="display:none;pointer-events:none">
+    <g data-label-id="alava" data-number-x="436.77" data-number-y="97.87">
+      <g data-lang="castilian" data-x="443.45" data-y="99.24" data-font-size="14" data-lines="Álava"></g>
+      <g data-lang="valencian" data-x="443.45" data-y="99.24" data-font-size="14" data-lines="Àlaba"></g>
+    </g>
+    <g data-label-id="albacete" data-number-x="491.2" data-number-y="460.08">
+      <g data-lang="castilian" data-x="488.06" data-y="457.51" data-font-size="14" data-lines="Albacete"></g>
+      <g data-lang="valencian" data-x="488.06" data-y="457.51" data-font-size="14" data-lines="Albacete"></g>
+    </g>
+    <g data-label-id="alicante" data-number-x="584.81" data-number-y="492.37">
+      <g data-lang="castilian" data-x="583.06" data-y="469.05" data-font-size="14" data-lines="Alicante"></g>
+      <g data-lang="valencian" data-x="579.55" data-y="469.05" data-font-size="14" data-lines="Alacant"></g>
+    </g>
+    <g data-label-id="almeria" data-number-x="460.44" data-number-y="586.23">
+      <g data-lang="castilian" data-x="458.45" data-y="597.22" data-font-size="14" data-lines="Almería"></g>
+      <g data-lang="valencian" data-x="458.45" data-y="597.22" data-font-size="14" data-lines="Almeria"></g>
+    </g>
+    <g data-label-id="avila" data-number-x="298.14" data-number-y="291.56">
+      <g data-lang="castilian" data-x="298.16" data-y="293.56" data-font-size="14" data-lines="Ávila"></g>
+      <g data-lang="valencian" data-x="298.16" data-y="293.56" data-font-size="14" data-lines="Àvila"></g>
+    </g>
+    <g data-label-id="badajoz" data-number-x="232.06" data-number-y="462.37">
+      <g data-lang="castilian" data-x="233.49" data-y="459.58" data-font-size="14" data-lines="Badajoz"></g>
+      <g data-lang="valencian" data-x="233.49" data-y="459.58" data-font-size="14" data-lines="Badajoz"></g>
+    </g>
+    <g data-label-id="balearicIslands" data-number-x="786.84" data-number-y="403.09">
+      <g data-lang="castilian" data-x="794.25" data-y="380.77" data-font-size="14" data-lines="Islas Baleares"></g>
+      <g data-lang="valencian" data-x="794.25" data-y="380.77" data-font-size="14" data-lines="Illes Balears"></g>
+    </g>
+    <g data-label-id="barcelona" data-number-x="741.91" data-number-y="191.04">
+      <g data-lang="castilian" data-x="743.78" data-y="199.16" data-font-size="14" data-lines="Barcelona"></g>
+      <g data-lang="valencian" data-x="743.78" data-y="199.16" data-font-size="14" data-lines="Barcelona"></g>
+    </g>
+    <g data-label-id="burgos" data-number-x="394.51" data-number-y="140.88">
+      <g data-lang="castilian" data-x="387.32" data-y="142.66" data-font-size="14" data-lines="Burgos"></g>
+      <g data-lang="valencian" data-x="387.32" data-y="142.66" data-font-size="14" data-lines="Burgos"></g>
+    </g>
+    <g data-label-id="caceres" data-number-x="215.84" data-number-y="368.18">
+      <g data-lang="castilian" data-x="217.07" data-y="370.86" data-font-size="14" data-lines="Cáceres"></g>
+      <g data-lang="valencian" data-x="217.07" data-y="370.86" data-font-size="14" data-lines="Càceres"></g>
+    </g>
+    <g data-label-id="cadiz" data-number-x="246.47" data-number-y="654.81">
+      <g data-lang="castilian" data-x="244.69" data-y="656.55" data-font-size="14" data-lines="Cádiz"></g>
+      <g data-lang="valencian" data-x="244.69" data-y="656.55" data-font-size="14" data-lines="Cadis"></g>
+    </g>
+    <g data-label-id="castellon" data-number-x="600.5" data-number-y="323.71">
+      <g data-lang="castilian" data-x="609.46" data-y="324.53" data-font-size="14" data-lines="Castellón"></g>
+      <g data-lang="valencian" data-x="591.53" data-y="338.88" data-font-size="14" data-lines="Castelló"></g>
+    </g>
+    <g data-label-id="ciudadReal" data-number-x="368.08" data-number-y="439.02">
+      <g data-lang="castilian" data-x="367.12" data-y="436.74" data-font-size="14" data-lines="Ciudad Real"></g>
+      <g data-lang="valencian" data-x="367.12" data-y="436.74" data-font-size="14" data-lines="Ciudad Real"></g>
+    </g>
+    <g data-label-id="cordoba" data-number-x="307.99" data-number-y="528.06">
+      <g data-lang="castilian" data-x="310.08" data-y="528.7" data-font-size="14" data-lines="Córdoba"></g>
+      <g data-lang="valencian" data-x="310.08" data-y="528.7" data-font-size="14" data-lines="Còrdova"></g>
+    </g>
+    <g data-label-id="aCoruna" data-number-x="74.45" data-number-y="69.82">
+      <g data-lang="castilian" data-x="76.62" data-y="69.51" data-font-size="14" data-lines="A Coruña"></g>
+      <g data-lang="valencian" data-x="72.29" data-y="73.83" data-font-size="14" data-lines="A Corunya"></g>
+    </g>
+    <g data-label-id="cuenca" data-number-x="475.07" data-number-y="351.94">
+      <g data-lang="castilian" data-x="477.09" data-y="349.3" data-font-size="14" data-lines="Cuenca"></g>
+      <g data-lang="valencian" data-x="477.09" data-y="349.3" data-font-size="14" data-lines="Conca"></g>
+    </g>
+    <g data-label-id="girona" data-number-x="771.18" data-number-y="163.13">
+      <g data-lang="castilian" data-x="784.56" data-y="149.09" data-font-size="14" data-lines="Girona"></g>
+      <g data-lang="valencian" data-x="784.56" data-y="149.09" data-font-size="14" data-lines="Girona"></g>
+    </g>
+    <g data-label-id="granada" data-number-x="404.56" data-number-y="578.3">
+      <g data-lang="castilian" data-x="401.58" data-y="580.87" data-font-size="14" data-lines="Granada"></g>
+      <g data-lang="valencian" data-x="401.58" data-y="580.87" data-font-size="14" data-lines="Granada"></g>
+    </g>
+    <g data-label-id="guadalajara" data-number-x="450.74" data-number-y="281.3">
+      <g data-lang="castilian" data-x="450.06" data-y="279.13" data-font-size="14" data-lines="Guadalajara"></g>
+      <g data-lang="valencian" data-x="450.06" data-y="279.13" data-font-size="14" data-lines="Guadalajara"></g>
+    </g>
+    <g data-label-id="guipuzcoa" data-number-x="479.11" data-number-y="67.23">
+      <g data-lang="castilian" data-x="478.24" data-y="62.61" data-font-size="13.0" data-lines="Guipúzcoa"></g>
+      <g data-lang="valencian" data-x="478.24" data-y="62.61" data-font-size="13.0" data-lines="Guipúscoa"></g>
+    </g>
+    <g data-label-id="huelva" data-number-x="179.52" data-number-y="568.27">
+      <g data-lang="castilian" data-x="177.68" data-y="566.96" data-font-size="14" data-lines="Huelva"></g>
+      <g data-lang="valencian" data-x="177.68" data-y="566.96" data-font-size="14" data-lines="Huelva"></g>
+    </g>
+    <g data-label-id="huesca" data-number-x="606.28" data-number-y="157.57">
+      <g data-lang="castilian" data-x="608.53" data-y="157.52" data-font-size="14" data-lines="Huesca"></g>
+      <g data-lang="valencian" data-x="608.53" data-y="157.52" data-font-size="14" data-lines="Osca"></g>
+    </g>
+    <g data-label-id="jaen" data-number-x="398.62" data-number-y="528.02">
+      <g data-lang="castilian" data-x="397.62" data-y="525.89" data-font-size="14" data-lines="Jaén"></g>
+      <g data-lang="valencian" data-x="397.62" data-y="525.89" data-font-size="14" data-lines="Jaén"></g>
+    </g>
+    <g data-label-id="leon" data-number-x="237.56" data-number-y="113.26">
+      <g data-lang="castilian" data-x="236.95" data-y="111.03" data-font-size="14" data-lines="León"></g>
+      <g data-lang="valencian" data-x="236.95" data-y="111.03" data-font-size="14" data-lines="Lleó"></g>
+    </g>
+    <g data-label-id="lleida" data-number-x="680.29" data-number-y="163.59">
+      <g data-lang="castilian" data-x="678.27" data-y="164.33" data-font-size="14" data-lines="Lérida"></g>
+      <g data-lang="valencian" data-x="678.27" data-y="164.33" data-font-size="14" data-lines="Lleida"></g>
+    </g>
+    <g data-label-id="laRioja" data-number-x="459.06" data-number-y="144.67">
+      <g data-lang="castilian" data-x="449.06" data-y="146.0" data-font-size="14" data-lines="La Rioja"></g>
+      <g data-lang="valencian" data-x="449.06" data-y="146.0" data-font-size="14" data-lines="La Rioja"></g>
+    </g>
+    <g data-label-id="lugo" data-number-x="142.49" data-number-y="77.43">
+      <g data-lang="castilian" data-x="144.05" data-y="78.25" data-font-size="14" data-lines="Lugo"></g>
+      <g data-lang="valencian" data-x="144.05" data-y="78.25" data-font-size="14" data-lines="Lugo"></g>
+    </g>
+    <g data-label-id="madrid" data-number-x="369.88" data-number-y="301.1">
+      <g data-lang="castilian" data-x="367.87" data-y="302.64" data-font-size="14" data-lines="Madrid"></g>
+      <g data-lang="valencian" data-x="367.87" data-y="302.64" data-font-size="14" data-lines="Madrid"></g>
+    </g>
+    <g data-label-id="malaga" data-number-x="314.63" data-number-y="630.99">
+      <g data-lang="castilian" data-x="315.32" data-y="625.63" data-font-size="14" data-lines="Málaga"></g>
+      <g data-lang="valencian" data-x="315.32" data-y="625.63" data-font-size="14" data-lines="Màlaga"></g>
+    </g>
+    <g data-label-id="murcia" data-number-x="515.52" data-number-y="518.38">
+      <g data-lang="castilian" data-x="513.34" data-y="520.4" data-font-size="14" data-lines="Murcia"></g>
+      <g data-lang="valencian" data-x="513.34" data-y="520.4" data-font-size="14" data-lines="Múrcia"></g>
+    </g>
+    <g data-label-id="navarre" data-number-x="509.41" data-number-y="115.31">
+      <g data-lang="castilian" data-x="507.07" data-y="111.95" data-font-size="14" data-lines="Navarra"></g>
+      <g data-lang="valencian" data-x="507.07" data-y="111.95" data-font-size="14" data-lines="Navarra"></g>
+    </g>
+    <g data-label-id="ourense" data-number-x="133.44" data-number-y="152.44">
+      <g data-lang="castilian" data-x="134.45" data-y="153.86" data-font-size="14" data-lines="Orense"></g>
+      <g data-lang="valencian" data-x="134.45" data-y="153.86" data-font-size="14" data-lines="Ourense"></g>
+    </g>
+    <g data-label-id="asturias" data-number-x="241.29" data-number-y="56.83">
+      <g data-lang="castilian" data-x="241.5" data-y="55.4" data-font-size="14" data-lines="Asturias"></g>
+      <g data-lang="valencian" data-x="241.5" data-y="55.4" data-font-size="14" data-lines="Astúries"></g>
+    </g>
+    <g data-label-id="palencia" data-number-x="328.97" data-number-y="133.37">
+      <g data-lang="castilian" data-x="327.47" data-y="170.61" data-font-size="14" data-lines="Palencia"></g>
+      <g data-lang="valencian" data-x="327.47" data-y="170.61" data-font-size="14" data-lines="Palència"></g>
+    </g>
+    <g data-label-id="lasPalmas" data-number-x="192.53" data-number-y="745.32">
+      <g data-lang="castilian" data-x="149.06" data-y="762.34" data-font-size="14" data-lines="Las Palmas"></g>
+      <g data-lang="valencian" data-x="149.06" data-y="762.34" data-font-size="14" data-lines="Las Palmas"></g>
+    </g>
+    <g data-label-id="pontevedra" data-number-x="79.44" data-number-y="137.43">
+      <g data-lang="castilian" data-x="83.72" data-y="114.91" data-font-size="14" data-lines="Pontevedra"></g>
+      <g data-lang="valencian" data-x="83.72" data-y="114.91" data-font-size="14" data-lines="Pontevedra"></g>
+    </g>
+    <g data-label-id="salamanca" data-number-x="230.95" data-number-y="279.12">
+      <g data-lang="castilian" data-x="232.79" data-y="277.18" data-font-size="14" data-lines="Salamanca"></g>
+      <g data-lang="valencian" data-x="232.79" data-y="277.18" data-font-size="14" data-lines="Salamanca"></g>
+    </g>
+    <g data-label-id="santaCruzDeTenerife" data-number-x="80.59" data-number-y="754.19">
+      <g data-lang="castilian" data-x="103.93" data-y="753.22" data-font-size="14" data-lines="Santa Cruz de Tenerife"></g>
+      <g data-lang="valencian" data-x="103.93" data-y="753.22" data-font-size="14" data-lines="Santa Cruz de Tenerife"></g>
+    </g>
+    <g data-label-id="cantabria" data-number-x="358.11" data-number-y="68.87">
+      <g data-lang="castilian" data-x="355.92" data-y="64.69" data-font-size="14" data-lines="Cantabria"></g>
+      <g data-lang="valencian" data-x="355.92" data-y="64.69" data-font-size="14" data-lines="Cantàbria"></g>
+    </g>
+    <g data-label-id="segovia" data-number-x="360.45" data-number-y="248.45">
+      <g data-lang="castilian" data-x="352.99" data-y="239.65" data-font-size="14" data-lines="Segovia"></g>
+      <g data-lang="valencian" data-x="352.99" data-y="239.65" data-font-size="14" data-lines="Segòvia"></g>
+    </g>
+    <g data-label-id="sevilla" data-number-x="257.24" data-number-y="566.73">
+      <g data-lang="castilian" data-x="254.76" data-y="568.82" data-font-size="14" data-lines="Sevilla"></g>
+      <g data-lang="valencian" data-x="254.76" data-y="568.82" data-font-size="14" data-lines="Sevilla"></g>
+    </g>
+    <g data-label-id="soria" data-number-x="443.13" data-number-y="204.91">
+      <g data-lang="castilian" data-x="441.52" data-y="202.9" data-font-size="14" data-lines="Soria"></g>
+      <g data-lang="valencian" data-x="441.52" data-y="202.9" data-font-size="14" data-lines="Sòria"></g>
+    </g>
+    <g data-label-id="tarragona" data-number-x="668.75" data-number-y="253.03">
+      <g data-lang="castilian" data-x="674.3" data-y="239.39" data-font-size="14" data-lines="Tarragona"></g>
+      <g data-lang="valencian" data-x="674.3" data-y="239.39" data-font-size="14" data-lines="Tarragona"></g>
+    </g>
+    <g data-label-id="teruel" data-number-x="563.55" data-number-y="293.56">
+      <g data-lang="castilian" data-x="560.78" data-y="296.01" data-font-size="14" data-lines="Teruel"></g>
+      <g data-lang="valencian" data-x="560.78" data-y="296.01" data-font-size="14" data-lines="Terol"></g>
+    </g>
+    <g data-label-id="toledo" data-number-x="348.25" data-number-y="365.75">
+      <g data-lang="castilian" data-x="349.12" data-y="367.7" data-font-size="14" data-lines="Toledo"></g>
+      <g data-lang="valencian" data-x="349.12" data-y="367.7" data-font-size="14" data-lines="Toledo"></g>
+    </g>
+    <g data-label-id="valencia" data-number-x="562.17" data-number-y="395.86">
+      <g data-lang="castilian" data-x="560.19" data-y="397.79" data-font-size="14" data-lines="Valencia"></g>
+      <g data-lang="valencian" data-x="560.19" data-y="397.79" data-font-size="14" data-lines="València"></g>
+    </g>
+    <g data-label-id="valladolid" data-number-x="310.69" data-number-y="195.88">
+      <g data-lang="castilian" data-x="312.71" data-y="200.51" data-font-size="14" data-lines="Valladolid"></g>
+      <g data-lang="valencian" data-x="312.71" data-y="200.51" data-font-size="14" data-lines="Valladolid"></g>
+    </g>
+    <g data-label-id="vizcaya" data-number-x="421.69" data-number-y="53.47">
+      <g data-lang="castilian" data-x="423.07" data-y="50.84" data-font-size="14" data-lines="Vizcaya"></g>
+      <g data-lang="valencian" data-x="421.32" data-y="52.59" data-font-size="14" data-lines="Biscaia"></g>
+    </g>
+    <g data-label-id="zamora" data-number-x="223.27" data-number-y="197.5">
+      <g data-lang="castilian" data-x="226.93" data-y="187.02" data-font-size="14" data-lines="Zamora"></g>
+      <g data-lang="valencian" data-x="226.93" data-y="187.02" data-font-size="14" data-lines="Zamora"></g>
+    </g>
+    <g data-label-id="zaragoza" data-number-x="554.94" data-number-y="183.61">
+      <g data-lang="castilian" data-x="544.04" data-y="193.61" data-font-size="14" data-lines="Zaragoza"></g>
+      <g data-lang="valencian" data-x="537.37" data-y="193.61" data-font-size="14" data-lines="Saragossa"></g>
+    </g>
+    <g data-label-id="ceuta" data-number-x="274.08" data-number-y="710.79">
+      <g data-lang="castilian" data-x="272.6" data-y="710.69" data-font-size="14" data-lines="Ceuta"></g>
+      <g data-lang="valencian" data-x="272.6" data-y="710.69" data-font-size="14" data-lines="Ceuta"></g>
+    </g>
+    <g data-label-id="melilla" data-number-x="424.88" data-number-y="764.04">
+      <g data-lang="castilian" data-x="424.71" data-y="762.94" data-font-size="14" data-lines="Melilla"></g>
+      <g data-lang="valencian" data-x="424.71" data-y="762.94" data-font-size="14" data-lines="Melilla"></g>
+    </g>
+  </g>
 </svg>

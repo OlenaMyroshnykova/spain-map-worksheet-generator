@@ -25,7 +25,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import geopandas as gpd
-from shapely.geometry import GeometryCollection, MultiPolygon, Polygon, box as shapely_box
+from shapely.geometry import GeometryCollection, MultiPolygon, Point, Polygon, box as shapely_box
+from shapely.ops import transform as shapely_transform
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -265,7 +266,7 @@ COMMUNITIES_STYLE = (
     "#africa-context path { stroke: #888; stroke-width: 0.5; pointer-events: none; } "
     "#africa-context path:hover { opacity: 1; cursor: default; } "
     ".inset-border { fill: none; stroke: #999; stroke-width: 1; stroke-dasharray: 4 3; } "
-    ".inset-label { font-family: sans-serif; font-size: 9px; fill: #666; } "
+    ".inset-label { font-family: "Segoe UI", Arial, sans-serif; font-size: 14px; font-weight: 600; fill: #1a202c; } "
 )
 
 
@@ -328,12 +329,13 @@ def add_inset_frame(parent: ET.Element, label: str) -> ET.Element:
         "height": str(INSET_HEIGHT),
         "class": "inset-border",
     })
-    text = ET.SubElement(group, "text", {
-        "x": str(INSET_X + 4),
-        "y": str(INSET_Y + INSET_HEIGHT - 4),
-        "class": "inset-label",
-    })
-    text.text = label
+    if label:
+        text = ET.SubElement(group, "text", {
+            "x": str(INSET_X + 4),
+            "y": str(INSET_Y + INSET_HEIGHT - 4),
+            "class": "inset-label",
+        })
+        text.text = label
     return group
 
 
@@ -353,6 +355,185 @@ def add_path(
     ET.SubElement(parent, "path", attrs)
 
 
+
+# ---------------------------------------------------------------------------
+# Precomputed label layouts
+# ---------------------------------------------------------------------------
+
+PROVINCE_LABEL_OVERRIDES = {
+    "03": {"dx": 0.6, "dy": 0.8},
+    "12": {"dx": -0.4, "dy": -0.8},
+    "28": {"dx": 0.0, "dy": 0.6},
+    "08": {"dx": -0.5, "dy": -0.2},
+    "43": {"dx": 0.2, "dy": -0.7},
+    "48": {"dx": -4.2, "dy": -8.0},
+    "20": {"dx": 4.8, "dy": -0.8},
+    "01": {"dx": 0.0, "dy": 3.2},
+    "35": {"font_size": 14},
+    "38": {"font_size": 14},
+    "51": {"font_size": 14},
+    "52": {"font_size": 14},
+}
+
+ISLAND_PROVINCE_CODES = {"07", "35", "38"}
+
+COMMUNITY_LABEL_OVERRIDES = {
+    # Tiny/narrow regions and detached insets need explicit layouts.
+    "04": {
+        # The Canary Islands name is rendered as the larger inset caption,
+        # not over the islands themselves.
+        "hide_label": True,
+    },
+    "09": {
+        "font_size": 13.5,
+        "x": 340.0,
+        "y": 708.0,
+        "lines": {
+            "castilian": ["Ciudad Autónoma", "de Ceuta"],
+            "valencian": ["Ciutat Autònoma", "de Ceuta"],
+        },
+    },
+    "14": {
+        "font_size": 13.5,
+        "x": 495.0,
+        "y": 758.0,
+        "lines": {
+            "castilian": ["Ciudad Autónoma", "de Melilla"],
+            "valencian": ["Ciutat Autònoma", "de Melilla"],
+        },
+    },
+    "16": {
+        "font_size": 12.5,
+        "x": 517.0,
+        "y": 120.0,
+        "lines": {
+            "castilian": ["Comunidad", "Foral de", "Navarra"],
+            "valencian": ["Comunitat", "Foral de", "Navarra"],
+        },
+    },
+}
+
+def project_geometry_to_svg(geometry, bounds, canvas_w, canvas_h, tx=0, ty=0):
+    def fn(x, y, z=None):
+        px, py = project_to_svg(x, y, bounds, canvas_w, canvas_h)
+        return px + tx, py + ty
+    return shapely_transform(fn, geometry)
+
+def estimate_text_width(text: str, size: float) -> float:
+    width = 0.0
+    for ch in text:
+        if ch.isspace(): width += 0.32
+        elif ch in "ilIíìïî|.,'": width += 0.30
+        elif ch in "mwMWÁÀÉÈÓÒÚÙÑ": width += 0.82
+        else: width += 0.57
+    return width * size
+
+def line_variants(label: str):
+    words = label.split()
+    variants = [[label]]
+    for split in range(1, len(words)):
+        variants.append([" ".join(words[:split]), " ".join(words[split:])])
+    return sorted(variants, key=lambda lines: max(map(len, lines)) - min(map(len, lines)))
+
+def fit_ratio(geom, cx, cy, width, height):
+    hw, hh = width / 2 + .25, height / 2 + .25
+    samples = [(0,0,4),(-.5,0,3),(.5,0,3),(0,-.5,3),(0,.5,3),
+               (-.5,-.5,2),(.5,-.5,2),(-.5,.5,2),(.5,.5,2),
+               (-1,0,2),(1,0,2),(0,-1,2),(0,1,2),
+               (-1,-1,1),(1,-1,1),(-1,1,1),(1,1,1),
+               (-1,-.5,1),(-1,.5,1),(1,-.5,1),(1,.5,1),
+               (-.5,-1,1),(.5,-1,1),(-.5,1,1),(.5,1,1)]
+    total = sum(w for _,_,w in samples)
+    inside = sum(w for xr,yr,w in samples if geom.covers(Point(cx+xr*hw, cy+yr*hh)))
+    return inside / total
+
+def local_clearance(geom, cx, cy, max_distance=12, step=1.5):
+    dirs=((1,0),(-1,0),(0,1),(0,-1),(.707,.707),(.707,-.707),(-.707,.707),(-.707,-.707))
+    total=0.0
+    for dx,dy in dirs:
+        distance=0.0
+        d=step
+        while d <= max_distance + 1e-9:
+            if not geom.covers(Point(cx+dx*d, cy+dy*d)): break
+            distance=d; d += step
+        total += distance
+    return total/len(dirs)
+
+def contour_label_layout(geom, label, max_font=14.0, min_font=6.0):
+    minx,miny,maxx,maxy=geom.bounds
+    bw,bh=maxx-minx,maxy-miny
+    if bw <= 0 or bh <= 0: return None
+    center_x,center_y=(minx+maxx)/2,(miny+maxy)/2
+    shortest=min(bw,bh); diagonal=max(1.0,(bw*bw+bh*bh)**.5)
+    coarse=max(.85, shortest/24)
+    variants=line_variants(label)
+    size=max_font
+    while size >= min_font-.001:
+        best=None
+        for lines in variants:
+            width=max(estimate_text_width(x,size) for x in lines)
+            height=max(size,len(lines)*size*1.2)
+            if width > bw*1.18 or height > bh*1.18: continue
+            required=.74 if len(lines)>1 else .70
+            y=miny+coarse/2
+            while y <= maxy:
+                x=minx+coarse/2
+                while x <= maxx:
+                    if geom.covers(Point(x,y)):
+                        ratio=fit_ratio(geom,x,y,width,height)
+                        if ratio >= required:
+                            clearance=local_clearance(geom,x,y,min(16,shortest*.65),max(.8,coarse*.75))
+                            dist=((x-center_x)**2+(y-center_y)**2)**.5/diagonal
+                            imbalance=abs(len(lines[0])-len(lines[1])) if len(lines)>1 else 0
+                            score=ratio*130+clearance*2.1-dist*20-imbalance*.45-(1.5 if len(lines)>1 else 0)
+                            if best is None or score>best[0]: best=(score,x,y,lines)
+                    x += coarse
+                y += coarse
+        if best:
+            return {"x":best[1],"y":best[2],"size":round(size,2),"lines":best[3]}
+        size=round(size-.25,2)
+    rp=geom.representative_point()
+    return {"x":rp.x,"y":rp.y,"size":min_font,"lines":[label]}
+
+def add_precomputed_labels(svg, entries, topic):
+    root=ET.SubElement(svg,"g",{"id":"precomputed-labels","style":"display:none;pointer-events:none"})
+    for entry in entries:
+        item=entry["item"]; geom=entry["geometry"]; code=item["code"]
+        override = PROVINCE_LABEL_OVERRIDES.get(code, {}) if topic == "provinces" else COMMUNITY_LABEL_OVERRIDES.get(code, {})
+        minx,miny,maxx,maxy=geom.bounds
+        nx=(minx+maxx)/2 + override.get("dx",0); ny=(miny+maxy)/2 + override.get("dy",0)
+        meta=ET.SubElement(root,"g",{"data-label-id":item["id"],"data-number-x":str(round(nx,2)),"data-number-y":str(round(ny,2))})
+        if override.get("hide_label"):
+            continue
+        for lang in ("castilian","valencian"):
+            label=item["names"][lang]
+            explicit_lines = override.get("lines", {}).get(lang)
+            if explicit_lines:
+                layout = {
+                    "x": override["x"],
+                    "y": override["y"],
+                    "size": override["font_size"],
+                    "lines": explicit_lines,
+                }
+            elif topic == "provinces" and code in ISLAND_PROVINCE_CODES:
+                rp = geom.representative_point()
+                layout = {"x": rp.x, "y": rp.y, "size": override.get("font_size", 14), "lines": [label]}
+            else:
+                max_font = 18 if topic == "communities" else 14
+                min_font = 9 if topic == "communities" else 6
+                layout = contour_label_layout(geom, label, max_font, min_font)
+                if "font_size" in override:
+                    layout["size"] = override["font_size"]
+                if "x" in override:
+                    layout["x"] = override["x"]
+                if "y" in override:
+                    layout["y"] = override["y"]
+            layout["x"] += override.get("dx", 0)
+            layout["y"] += override.get("dy", 0)
+            lg=ET.SubElement(meta,"g",{"data-lang":lang,"data-x":str(round(layout["x"],2)),"data-y":str(round(layout["y"],2)),"data-font-size":str(layout["size"]),"data-lines":"|".join(layout["lines"])})
+            lg.text = " "  # Keep explicit <g></g>; SVG is later parsed through HTML innerHTML.
+    return root
+
 # ---------------------------------------------------------------------------
 # SVG builders
 # ---------------------------------------------------------------------------
@@ -362,6 +543,7 @@ def build_provinces_svg(
     gdf: gpd.GeoDataFrame,
     community_colors: dict,
     province_ids: dict,
+    spain_data: dict,
     africa_gdf: "gpd.GeoDataFrame | None" = None,
 ) -> ET.Element:
     """Build SVG with one <path> per province."""
@@ -371,6 +553,7 @@ def build_provinces_svg(
 
     mainland = ET.SubElement(svg, "g", {"id": "mainland"})
     inset = add_inset_frame(svg, "Islas Canarias")
+    label_entries = []
 
     for _, row in gdf.iterrows():
         province_code = str(row["cod_prov"]).zfill(2)
@@ -391,7 +574,11 @@ def build_provinces_svg(
             "fill": fill,
         }
         add_path(inset if canary else mainland, path_data, attrs, is_inset=canary)
+        projected = project_geometry_to_svg(row.geometry, bounds, canvas_w, canvas_h, INSET_X if canary else 0, INSET_Y if canary else 0)
+        item = next((p for p in spain_data["provinces"] if p["code"] == province_code), None)
+        if item: label_entries.append({"item": item, "geometry": projected})
 
+    add_precomputed_labels(svg, label_entries, "provinces")
     add_enclave_markers(svg)
     return svg
 
@@ -400,6 +587,7 @@ def build_communities_svg(
     communities_gdf: gpd.GeoDataFrame,
     community_colors: dict,
     community_ids: dict,
+    spain_data: dict,
     africa_gdf: "gpd.GeoDataFrame | None" = None,
 ) -> ET.Element:
     """Build SVG with one <path> per autonomous community (es-atlas source)."""
@@ -410,6 +598,7 @@ def build_communities_svg(
 
     mainland = ET.SubElement(svg, "g", {"id": "mainland"})
     inset = add_inset_frame(svg, "Islas Canarias")
+    label_entries = []
 
     for _, row in communities_gdf.iterrows():
         community_code = str(row["cod_ccaa"]).zfill(2)
@@ -430,6 +619,11 @@ def build_communities_svg(
             "fill": fill,
         }
         add_path(inset if is_canary else mainland, path_data, attrs, is_inset=is_canary)
+        projected = project_geometry_to_svg(row.geometry, bounds, canvas_w, canvas_h, INSET_X if is_canary else 0, INSET_Y if is_canary else 0)
+        item = next((c for c in spain_data["autonomousCommunities"] if c["code"] == community_code), None)
+        if item: label_entries.append({"item": item, "geometry": projected})
+
+    add_precomputed_labels(svg, label_entries, "communities")
 
     # Border overlay: draw community outlines on top with no fill.
     # Since community fill paths have stroke:none, ONLY this overlay draws borders —
@@ -483,7 +677,21 @@ def write_svg(element: ET.Element, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tree = ET.ElementTree(element)
     ET.indent(tree, space="  ")
-    tree.write(path, encoding="unicode", xml_declaration=False)
+
+    # ElementTree may introduce an ``ns0:`` prefix when an existing SVG
+    # with a default namespace was parsed and then modified. The browser
+    # inserts these files through HTML ``innerHTML``; tags such as
+    # ``<ns0:style>`` are then treated as unknown HTML elements and their
+    # CSS is rendered as visible text. Serialize and normalise the SVG back
+    # to a plain default namespace so all tags remain native SVG elements.
+    svg_text = ET.tostring(element, encoding="unicode")
+    svg_text = svg_text.replace("<ns0:", "<").replace("</ns0:", "</")
+    svg_text = svg_text.replace(
+        'xmlns:ns0="http://www.w3.org/2000/svg"',
+        'xmlns="http://www.w3.org/2000/svg"',
+    )
+    path.write_text(svg_text, encoding="utf-8")
+
     size_kb = path.stat().st_size // 1024
     print(f"  Saved: {path}  ({size_kb} KB)")
 
@@ -513,13 +721,13 @@ def main(communities_only: bool = False) -> None:
         prov_gdf = download_geojson(GEOJSON_URL)
         print(f"  Loaded {len(prov_gdf)} provinces.")
         print("\nBuilding provinces.svg...")
-        provinces_svg = build_provinces_svg(prov_gdf, community_colors, province_ids, africa_gdf)
+        provinces_svg = build_provinces_svg(prov_gdf, community_colors, province_ids, spain_data, africa_gdf)
         write_svg(provinces_svg, OUTPUT_PROVINCES)
 
     print("\nDownloading community boundaries (es-atlas)...")
     comm_gdf = download_communities_geojson()
     print("\nBuilding communities.svg...")
-    communities_svg = build_communities_svg(comm_gdf, community_colors, community_ids, africa_gdf)
+    communities_svg = build_communities_svg(comm_gdf, community_colors, community_ids, spain_data, africa_gdf)
     write_svg(communities_svg, OUTPUT_COMMUNITIES)
 
     print("\nDone.")

@@ -518,6 +518,9 @@ function subset() {
 
 // ── Parse SVG string → DOM element ─────────────────────────────────────
 function parseSVG(str) {
+  // SVG is inserted through the HTML parser. Empty <g ... /> nodes are not
+  // reliably self-closing in HTML, so normalize them before parsing.
+  str = str.replace(/<g(\s+[^>]*?)\s*\/>/g, '<g$1></g>');
   const div = document.createElement('div');
   div.innerHTML = str;
   const svg = div.firstElementChild;
@@ -528,450 +531,44 @@ function parseSVG(str) {
   return svg;
 }
 
-// ── Add text labels using real province contours ────────────────────────
-// Island provinces keep the previous bbox-centre behaviour because their
-// existing labels are already positioned correctly.
-const ISLAND_PROVINCE_IDS = new Set(['07', '35', '38']);
-
-// Final visual adjustments for province labels.
-// Province codes are INE codes, so these corrections work in both languages.
-const PROVINCE_LABEL_OVERRIDES = {
-  '03': { dx:  0.6, dy:  0.8 }, // Alicante
-  '12': { dx: -0.4, dy: -0.8 }, // Castelló / Castellón
-  '28': { dx:  0.0, dy:  0.6 }, // Madrid
-  '08': { dx: -0.5, dy: -0.2 }, // Barcelona
-  '43': { dx:  0.2, dy: -0.7 }, // Tarragona
-
-  // País Vasco
-  '48': { dx: -4.2, dy: -8.0 }, // Bizkaia / Vizcaya — higher
-  '20': { dx:  4.8, dy: -0.8 }, // Gipuzkoa / Guipúzcoa
-  '01': { dx:  0.0, dy:  3.2 }, // Araba / Álava
-
-  // Canary Islands and autonomous cities
-  '35': { fontSize: 14 }, // Las Palmas
-  '38': { fontSize: 14 }, // Santa Cruz de Tenerife
-  '51': { fontSize: 14 }, // Ceuta
-  '52': { fontSize: 14 }, // Melilla
-};
-
-function pathTranslation(path) {
-  let tx = 0, ty = 0;
-  const xf = path.getAttribute('transform');
-  if (xf) {
-    const m = xf.match(/translate\(([\d.-]+),\s*([\d.-]+)\)/);
-    if (m) { tx = parseFloat(m[1]); ty = parseFloat(m[2]); }
-  }
-  return { tx, ty };
-}
-
-function pointInPath(path, x, y) {
-  if (typeof path.isPointInFill !== 'function') return false;
-  try {
-    return path.isPointInFill(new DOMPoint(x, y));
-  } catch (_) {
-    return false;
-  }
-}
-
-function labelFitMetrics(path, cx, cy, width, height, padding = 0.25) {
-  const hw = width / 2 + padding;
-  const hh = height / 2 + padding;
-
-  // Dense weighted sampling of the actual text rectangle.
-  // The centre and inner area matter more than extreme corners, because the
-  // white outline can safely cross a border by a very small amount.
-  const samples = [
-    [ 0.00,  0.00, 4],
-    [-0.50,  0.00, 3], [0.50,  0.00, 3],
-    [ 0.00, -0.50, 3], [0.00, 0.50, 3],
-
-    [-0.50, -0.50, 2], [0.50, -0.50, 2],
-    [-0.50,  0.50, 2], [0.50,  0.50, 2],
-
-    [-1.00,  0.00, 2], [1.00,  0.00, 2],
-    [ 0.00, -1.00, 2], [0.00, 1.00, 2],
-
-    [-1.00, -1.00, 1], [1.00, -1.00, 1],
-    [-1.00,  1.00, 1], [1.00, 1.00, 1],
-
-    [-1.00, -0.50, 1], [-1.00, 0.50, 1],
-    [ 1.00, -0.50, 1], [ 1.00, 0.50, 1],
-    [-0.50, -1.00, 1], [ 0.50, -1.00, 1],
-    [-0.50,  1.00, 1], [ 0.50, 1.00, 1],
-  ];
-
-  let insideWeight = 0;
-  let totalWeight = 0;
-
-  for (const [xr, yr, weight] of samples) {
-    totalWeight += weight;
-    if (pointInPath(path, cx + xr * hw, cy + yr * hh)) {
-      insideWeight += weight;
-    }
-  }
-
-  return {
-    centerInside: pointInPath(path, cx, cy),
-    ratio: insideWeight / totalWeight,
-  };
-}
-
-function localClearance(path, cx, cy, maxDistance = 12, step = 1.5) {
-  const directions = [
-    [1, 0], [-1, 0], [0, 1], [0, -1],
-    [0.707, 0.707], [0.707, -0.707],
-    [-0.707, 0.707], [-0.707, -0.707],
-  ];
-
-  let total = 0;
-  for (const [dx, dy] of directions) {
-    let distance = 0;
-    for (let d = step; d <= maxDistance; d += step) {
-      if (!pointInPath(path, cx + dx * d, cy + dy * d)) break;
-      distance = d;
-    }
-    total += distance;
-  }
-  return total / directions.length;
-}
-
-function measureLabel(svgEl, lines, fontSize) {
-  const ns = 'http://www.w3.org/2000/svg';
-  const probe = document.createElementNS(ns, 'text');
-  probe.setAttribute('font-size', fontSize);
-  probe.setAttribute('font-weight', '600');
-  probe.setAttribute('font-family', 'Segoe UI,Arial,sans-serif');
-  probe.setAttribute('visibility', 'hidden');
-  probe.setAttribute('pointer-events', 'none');
-  svgEl.appendChild(probe);
-
-  let width = 0;
-  for (const line of lines) {
-    probe.textContent = line;
-    try {
-      width = Math.max(width, probe.getComputedTextLength());
-    } catch (_) {
-      width = Math.max(width, line.length * fontSize * 0.58);
-    }
-  }
-  probe.remove();
-
-  return {
-    width,
-    height: Math.max(fontSize, lines.length * fontSize * 1.2),
-  };
-}
-
-function labelLineVariants(label) {
-  const words = label.split(/\s+/).filter(Boolean);
-  const variants = [[label]];
-
-  if (words.length >= 2) {
-    for (let split = 1; split < words.length; split++) {
-      variants.push([
-        words.slice(0, split).join(' '),
-        words.slice(split).join(' '),
-      ]);
-    }
-  }
-
-  // Prefer balanced lines when several layouts fit equally well.
-  return variants.sort((a, b) => {
-    const imbalance = lines => Math.max(...lines.map(x => x.length)) - Math.min(...lines.map(x => x.length));
-    return imbalance(a) - imbalance(b);
-  });
-}
-
-function findContourLabelLayout(svgEl, path, label, _automaticSize) {
-  let bb;
-  try { bb = path.getBBox(); } catch (_) { return null; }
-
-  const centerX = bb.x + bb.width / 2;
-  const centerY = bb.y + bb.height / 2;
-  const shortestSide = Math.min(bb.width, bb.height);
-  const diagonal = Math.max(1, Math.hypot(bb.width, bb.height));
-  const coarseStep = Math.max(0.85, shortestSide / 24);
-
-  /*
-   * Important: do not start from automaticSize.
-   * automaticSize is based on the bbox area and is often already too small
-   * for narrow provinces. We always try a genuinely large font first and
-   * descend only when no valid position exists.
-   */
-  const MAX_FONT_SIZE = 14;
-  const MIN_FONT_SIZE = 6.0;
-  const FONT_STEP = 0.25;
-  const variants = labelLineVariants(label);
-
-  for (
-    let rawSize = MAX_FONT_SIZE;
-    rawSize >= MIN_FONT_SIZE - 0.001;
-    rawSize -= FONT_STEP
-  ) {
-    const size = Math.round(rawSize * 100) / 100;
-    let bestForSize = null;
-
-    // At every font size, compare every possible line break and every
-    // candidate position. The first size that has a good solution wins.
-    for (const lines of variants) {
-      const measured = measureLabel(svgEl, lines, size);
-
-      // Avoid obviously impossible rectangles without rejecting narrow,
-      // irregular shapes solely because of their bbox.
-      if (measured.width > bb.width * 1.18 ||
-          measured.height > bb.height * 1.18) {
-        continue;
-      }
-
-      const twoLines = lines.length > 1;
-      const requiredCoverage = twoLines ? 0.74 : 0.70;
-
-      for (
-        let y = bb.y + coarseStep / 2;
-        y <= bb.y + bb.height;
-        y += coarseStep
-      ) {
-        for (
-          let x = bb.x + coarseStep / 2;
-          x <= bb.x + bb.width;
-          x += coarseStep
-        ) {
-          if (!pointInPath(path, x, y)) continue;
-
-          const fit = labelFitMetrics(
-            path, x, y, measured.width, measured.height
-          );
-          if (!fit.centerInside || fit.ratio < requiredCoverage) continue;
-
-          const centreDistance = Math.hypot(x - centerX, y - centerY);
-          const normalizedDistance = centreDistance / diagonal;
-          const clearance = localClearance(
-            path,
-            x,
-            y,
-            Math.min(16, shortestSide * 0.65),
-            Math.max(0.8, coarseStep * 0.75)
-          );
-
-          const lengths = lines.map(line => line.length);
-          const imbalance = twoLines
-            ? Math.abs(lengths[0] - lengths[1])
-            : 0;
-
-          // At a fixed size prefer strong contour coverage and breathing
-          // room, then visual centrality and balanced line breaks.
-          const score =
-            fit.ratio * 130 +
-            clearance * 2.1 -
-            normalizedDistance * 20 -
-            imbalance * 0.45 -
-            (twoLines ? 1.5 : 0);
-
-          if (!bestForSize || score > bestForSize.score) {
-            bestForSize = {
-              x, y, score, lines, measured, requiredCoverage
-            };
-          }
-        }
-      }
-    }
-
-    if (!bestForSize) continue;
-
-    // Fine search around the best coarse point, still validating the full
-    // rectangle for this exact font size.
-    const refineStep = Math.max(0.22, coarseStep / 5);
-    let refined = bestForSize;
-
-    for (
-      let y = bestForSize.y - coarseStep;
-      y <= bestForSize.y + coarseStep;
-      y += refineStep
-    ) {
-      for (
-        let x = bestForSize.x - coarseStep;
-        x <= bestForSize.x + coarseStep;
-        x += refineStep
-      ) {
-        if (!pointInPath(path, x, y)) continue;
-
-        const fit = labelFitMetrics(
-          path,
-          x,
-          y,
-          bestForSize.measured.width,
-          bestForSize.measured.height
-        );
-        if (!fit.centerInside ||
-            fit.ratio < bestForSize.requiredCoverage) {
-          continue;
-        }
-
-        const centreDistance = Math.hypot(x - centerX, y - centerY);
-        const normalizedDistance = centreDistance / diagonal;
-        const clearance = localClearance(
-          path,
-          x,
-          y,
-          Math.min(16, shortestSide * 0.65),
-          Math.max(0.7, refineStep * 2)
-        );
-
-        const lengths = bestForSize.lines.map(line => line.length);
-        const twoLines = bestForSize.lines.length > 1;
-        const imbalance = twoLines
-          ? Math.abs(lengths[0] - lengths[1])
-          : 0;
-
-        const score =
-          fit.ratio * 130 +
-          clearance * 2.1 -
-          normalizedDistance * 20 -
-          imbalance * 0.45 -
-          (twoLines ? 1.5 : 0);
-
-        if (score > refined.score) {
-          refined = {
-            ...bestForSize,
-            x,
-            y,
-            score,
-          };
-        }
-      }
-    }
-
-    return {
-      x: refined.x,
-      y: refined.y,
-      size,
-      lines: refined.lines,
-    };
-  }
-
-  return null;
-}
-
+// ── Add labels from layouts precomputed in the SVG generator ───────────
 function addLabels(svgEl, list, opts = {}) {
   const ns = 'http://www.w3.org/2000/svg';
-  const attr = dataAttr();
-  const minW = opts.minW || 14;
-  const vbW = parseFloat(svgEl.getAttribute('viewBox')?.split(' ')[2]) || 900;
+  const templates = svgEl.querySelector('#precomputed-labels');
+  if (!templates) return;
+
+  const output = document.createElementNS(ns, 'g');
+  output.setAttribute('class', 'rendered-labels');
+  output.setAttribute('pointer-events', 'none');
+  svgEl.appendChild(output);
 
   list.forEach((item, idx) => {
-    const path = svgEl.querySelector(`[${attr}="${item.id}"]`);
-    if (!path) return;
-
-    let bb;
-    try { bb = path.getBBox(); } catch (_) { return; }
-
-    const { tx, ty } = pathTranslation(path);
-    let cx = bb.x + bb.width / 2 + tx;
-    let cy = bb.y + bb.height / 2 + ty;
-    const provinceId = String(item.code).padStart(2, '0');
-    const labelOverride = S.topic === 'provinces'
-      ? (PROVINCE_LABEL_OVERRIDES[provinceId] || {})
-      : {};
-
-    const tooSmall = bb.width < minW && bb.height < minW;
-
-    // Keep the old external labels unchanged, including island callouts.
-    if (tooSmall && !opts.numbered) {
-      cx += labelOverride.dx || 0;
-      cy += labelOverride.dy || 0;
-
-      const dot = document.createElementNS(ns, 'circle');
-      dot.setAttribute('cx', cx); dot.setAttribute('cy', cy); dot.setAttribute('r', 3);
-      dot.setAttribute('fill', path.getAttribute('fill') || '#888');
-      dot.setAttribute('stroke', '#555'); dot.setAttribute('stroke-width', '0.7');
-      dot.setAttribute('pointer-events', 'none');
-      svgEl.appendChild(dot);
-
-      const goRight = cx < vbW * 0.55;
-      const lx = goRight ? cx + 13 : cx - 13;
-      const ly = cy;
-      const anchor = goRight ? 'start' : 'end';
-      const label = n(item);
-
-      const bg = document.createElementNS(ns, 'text');
-      bg.setAttribute('x', lx); bg.setAttribute('y', ly);
-      bg.setAttribute('text-anchor', anchor); bg.setAttribute('dominant-baseline', 'middle');
-      bg.setAttribute('font-size', String(labelOverride.fontSize || 7));
-      bg.setAttribute('font-weight', '600');
-      bg.setAttribute('font-family', 'Segoe UI,Arial,sans-serif');
-      bg.setAttribute('stroke', '#fff'); bg.setAttribute('stroke-width', '2.5');
-      bg.setAttribute('stroke-linejoin', 'round'); bg.setAttribute('paint-order', 'stroke');
-      bg.setAttribute('fill', 'none'); bg.setAttribute('pointer-events', 'none');
-      bg.textContent = label;
-
-      const fg = bg.cloneNode(false);
-      fg.removeAttribute('stroke'); fg.removeAttribute('stroke-width');
-      fg.removeAttribute('stroke-linejoin'); fg.removeAttribute('paint-order');
-      fg.setAttribute('fill', '#1a202c');
-      fg.textContent = label;
-      svgEl.appendChild(bg);
-      svgEl.appendChild(fg);
-      return;
-    }
-
-    if (tooSmall && opts.numbered) return;
-
-    const automaticSize = labelOverride.fontSize
-      || Math.max(5.5, Math.min(14, Math.sqrt(bb.width * bb.height) * 0.085));
+    const meta = templates.querySelector(`[data-label-id="${item.id}"]`);
+    if (!meta) return;
 
     if (opts.numbered) {
-      cx += labelOverride.dx || 0;
-      cy += labelOverride.dy || 0;
-
-      // Numbered worksheets intentionally retain the original positioning.
+      const cx = parseFloat(meta.dataset.numberX);
+      const cy = parseFloat(meta.dataset.numberY);
       const g = document.createElementNS(ns, 'g');
       const c = document.createElementNS(ns, 'circle');
       c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', 7);
       c.setAttribute('fill', '#fff'); c.setAttribute('stroke', '#2d3748'); c.setAttribute('stroke-width', '1');
-
       const t = document.createElementNS(ns, 'text');
       t.setAttribute('x', cx); t.setAttribute('y', cy);
       t.setAttribute('text-anchor', 'middle'); t.setAttribute('dominant-baseline', 'middle');
       t.setAttribute('font-size', '6'); t.setAttribute('font-weight', '800');
-      t.setAttribute('font-family', 'Segoe UI,Arial,sans-serif');
-      t.setAttribute('fill', '#1a202c'); t.setAttribute('pointer-events', 'none');
+      t.setAttribute('font-family', 'Segoe UI,Arial,sans-serif'); t.setAttribute('fill', '#1a202c');
       t.textContent = String(idx + 1);
-      g.appendChild(c); g.appendChild(t);
-      svgEl.appendChild(g);
+      g.append(c, t); output.appendChild(g);
       return;
     }
 
-    const label = n(item);
-    let size = automaticSize;
-    let lines;
-
-    const useContourAlgorithm =
-      S.topic === 'provinces' &&
-      !ISLAND_PROVINCE_IDS.has(String(item.code).padStart(2, '0'));
-
-    if (useContourAlgorithm) {
-      const layout = findContourLabelLayout(svgEl, path, label, automaticSize);
-      if (layout) {
-        cx = layout.x + tx;
-        cy = layout.y + ty;
-        size = layout.size;
-        lines = layout.lines;
-      }
-
-    }
-
-    // Apply manual position correction after automatic contour placement.
-    cx += labelOverride.dx || 0;
-    cy += labelOverride.dy || 0;
-
-    // Safe fallback: original bbox-centre algorithm.
-    if (!lines) {
-      const words = label.split(' ');
-      lines = (words.length > 2 && size >= 7)
-        ? [words.slice(0, Math.ceil(words.length / 2)).join(' '), words.slice(Math.ceil(words.length / 2)).join(' ')]
-        : [label];
-    }
-
+    const layout = meta.querySelector(`[data-lang="${S.lang}"]`);
+    if (!layout) return;
+    const cx = parseFloat(layout.dataset.x);
+    const cy = parseFloat(layout.dataset.y);
+    const size = parseFloat(layout.dataset.fontSize);
+    const lines = layout.dataset.lines.split('|');
     const lineH = size * 1.2;
     const startY = cy - (lines.length - 1) * lineH / 2;
 
@@ -981,16 +578,13 @@ function addLabels(svgEl, list, opts = {}) {
       t.setAttribute('text-anchor', 'middle'); t.setAttribute('dominant-baseline', 'middle');
       t.setAttribute('font-size', size); t.setAttribute('font-weight', '600');
       t.setAttribute('font-family', 'Segoe UI,Arial,sans-serif');
-      t.setAttribute('fill', opts.fill || '#1a202c'); t.setAttribute('pointer-events', 'none');
-
+      t.setAttribute('fill', opts.fill || '#1a202c');
       const bg = t.cloneNode(false);
       bg.setAttribute('stroke', '#fff'); bg.setAttribute('stroke-width', '2.5');
       bg.setAttribute('stroke-linejoin', 'round'); bg.setAttribute('paint-order', 'stroke');
       bg.setAttribute('fill', 'none');
-      bg.textContent = line;
-      t.textContent = line;
-      svgEl.appendChild(bg);
-      svgEl.appendChild(t);
+      bg.textContent = line; t.textContent = line;
+      output.append(bg, t);
     });
   });
 }
